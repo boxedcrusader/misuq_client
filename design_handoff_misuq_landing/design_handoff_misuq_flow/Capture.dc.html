@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta name="design_doc_mode" content="canvas">
+  <style>
+    @keyframes cc-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+    @keyframes cc-shimmer { 0%{background-position:-160px 0} 100%{background-position:220px 0} }
+    @keyframes cc-dot { 0%,80%,100%{opacity:.25;transform:translateY(0)} 40%{opacity:1;transform:translateY(-2px)} }
+    @keyframes cc-pop { 0%{transform:scale(.4) rotate(-8deg);opacity:0} 55%{transform:scale(1.12) rotate(3deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
+    @keyframes cc-burst { 0%{transform:translate(0,0) scale(0.4);opacity:1} 100%{transform:translate(var(--bx),var(--by)) scale(1);opacity:0} }
+    body{margin:0}
+    a{color:#5B4FE9;text-decoration:none}
+    a:hover{color:#4338CA}
+  </style>
+</helmet>
+<div style="min-height:100vh;background:#ECE9F8;font-family:'Inter',system-ui,sans-serif;padding:56px 48px 72px;box-sizing:border-box;color:#211D2E;">
+  <div style="max-width:1720px;margin:0 auto;">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;letter-spacing:-0.01em;">Misuq</div>
+      <div style="font-size:13px;color:#9089A5;letter-spacing:0.04em;text-transform:uppercase;">Capture · mobile</div>
+    </div>
+    <div style="font-size:15px;color:#8A84A0;max-width:560px;line-height:1.5;margin-bottom:44px;">The entry point. A founder drops a raw update before the agent turns it into a draft. Four states, left to right.</div>
+
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+
+      <!-- STATE 1 — EMPTY / IDLE -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding-left:4px;">
+          <span style="font-size:12px;font-weight:600;color:#5B4FE9;background:#ECEAFB;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;">1</span>
+          <span style="font-size:13px;font-weight:600;letter-spacing:0.02em;color:#4A4560;">Empty · idle</span>
+        </div>
+        <div style="width:392px;height:812px;background:#F7F6FC;border-radius:44px;padding:14px;box-sizing:border-box;box-shadow:0 24px 60px -30px rgba(64,48,32,0.4);">
+          <div style="width:100%;height:100%;border-radius:32px;background:#F7F6FC;box-sizing:border-box;padding:60px 30px 34px;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px;">
+              <div style="font-size:14px;color:#A39DBA;letter-spacing:0.03em;">Tuesday morning</div>
+              <div style="width:30px;height:30px;border-radius:50%;background:#ECE9F7;"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:38px;line-height:1.24;color:#C6C2DE;font-weight:600;letter-spacing:-0.02em;display:flex;align-items:flex-start;">
+                <span style="display:inline-block;width:3px;height:42px;background:#5B4FE9;margin-right:2px;margin-top:4px;animation:cc-blink 1.1s step-end infinite;"></span>
+                What&rsquo;d you ship or learn?
+              </div>
+            </div>
+            <div style="display:flex;gap:9px;margin-bottom:22px;">
+              <div style="font-size:14px;padding:8px 15px;border-radius:20px;border:1px solid #DAD6F0;color:#9C96B2;">Shipped</div>
+              <div style="font-size:14px;padding:8px 15px;border-radius:20px;border:1px solid #DAD6F0;color:#9C96B2;">Milestone</div>
+              <div style="font-size:14px;padding:8px 15px;border-radius:20px;border:1px solid #DAD6F0;color:#9C96B2;">Lesson</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;color:#AFA9C4;">Optional</div>
+              <div style="display:flex;align-items:center;gap:9px;font-size:16px;font-weight:600;color:#C6C2DE;background:#ECE9F7;padding:13px 24px;border-radius:26px;">Capture</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE 2 — TYPING -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding-left:4px;">
+          <span style="font-size:12px;font-weight:600;color:#5B4FE9;background:#ECEAFB;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;">2</span>
+          <span style="font-size:13px;font-weight:600;letter-spacing:0.02em;color:#4A4560;">Typing</span>
+        </div>
+        <div style="width:392px;height:812px;background:#F7F6FC;border-radius:44px;padding:14px;box-sizing:border-box;box-shadow:0 24px 60px -30px rgba(64,48,32,0.4);">
+          <div style="width:100%;height:100%;border-radius:32px;background:#F7F6FC;box-sizing:border-box;padding:60px 30px 34px;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px;">
+              <div style="font-size:14px;color:#A39DBA;letter-spacing:0.03em;">Tuesday morning</div>
+              <div style="width:30px;height:30px;border-radius:50%;background:#ECE9F7;"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:34px;line-height:1.26;color:#211D2E;font-weight:600;letter-spacing:-0.02em;">Shipped the new onboarding flow&mdash;cut signup from 6 steps to 2. Took all weekend but the drop-off should finally stop.<span style="display:inline-block;width:3px;height:32px;background:#5B4FE9;margin-left:2px;vertical-align:-5px;animation:cc-blink 1.1s step-end infinite;"></span></div>
+            </div>
+            <div style="display:flex;gap:9px;margin-bottom:22px;">
+              <div style="font-size:14px;padding:8px 15px;border-radius:20px;border:1px solid #5B4FE9;background:#ECEAFB;color:#4338CA;font-weight:600;">Shipped</div>
+              <div style="font-size:14px;padding:8px 15px;border-radius:20px;border:1px solid #DAD6F0;color:#9C96B2;">Milestone</div>
+              <div style="font-size:14px;padding:8px 15px;border-radius:20px;border:1px solid #DAD6F0;color:#9C96B2;">Lesson</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;color:#AFA9C4;">142 characters</div>
+              <div style="display:flex;align-items:center;gap:9px;font-size:16px;font-weight:600;color:#F5F3FF;background:#5B4FE9;padding:13px 24px;border-radius:26px;box-shadow:0 10px 22px -8px rgba(91,79,233,0.55);">Capture <span style="font-size:17px;">&rarr;</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE 3 — CAPTURED -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding-left:4px;">
+          <span style="font-size:12px;font-weight:600;color:#5B4FE9;background:#ECEAFB;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</span>
+          <span style="font-size:13px;font-weight:600;letter-spacing:0.02em;color:#4A4560;">Captured · confirmation</span>
+        </div>
+        <div style="width:392px;height:812px;background:#F7F6FC;border-radius:44px;padding:14px;box-sizing:border-box;box-shadow:0 24px 60px -30px rgba(64,48,32,0.4);">
+          <div style="width:100%;height:100%;border-radius:32px;background:#F7F6FC;box-sizing:border-box;padding:60px 30px 34px;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px;">
+              <div style="font-size:14px;color:#A39DBA;letter-spacing:0.03em;">Tuesday morning</div>
+              <div style="width:30px;height:30px;border-radius:50%;background:#ECE9F7;"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:22px;">
+              <div style="position:relative;width:64px;height:64px;">
+                <span style="position:absolute;top:50%;left:50%;width:7px;height:7px;border-radius:50%;background:#5B4FE9;--bx:-46px;--by:-30px;animation:cc-burst 0.7s ease-out .05s both;"></span>
+                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;border-radius:50%;background:#8B7FF5;--bx:44px;--by:-26px;animation:cc-burst 0.7s ease-out .1s both;"></span>
+                <span style="position:absolute;top:50%;left:50%;width:5px;height:5px;border-radius:50%;background:#5B4FE9;--bx:2px;--by:-52px;animation:cc-burst 0.7s ease-out .16s both;"></span>
+                <div style="width:64px;height:64px;border-radius:50%;background:#5B4FE9;display:flex;align-items:center;justify-content:center;animation:cc-pop 0.45s ease-out both;box-shadow:0 12px 28px -10px rgba(91,79,233,0.65);">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#F5F3FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+                </div>
+              </div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:29px;color:#211D2E;font-weight:600;">Nice. Logged.</div>
+              <div style="font-size:15px;color:#8A84A0;line-height:1.5;max-width:250px;">That one's tucked away safe. Nothing else to do&mdash;we've got it from here.</div>
+            </div>
+            <div style="background:#EFEDFB;border-radius:16px;padding:16px 18px;display:flex;align-items:flex-start;gap:12px;">
+              <span style="font-size:13px;padding:3px 10px;border-radius:14px;background:#ECEAFB;color:#4338CA;font-weight:600;flex-shrink:0;">Shipped</span>
+              <span style="font-size:14px;line-height:1.45;color:#87819C;">Shipped the new onboarding flow&mdash;cut signup from 6 steps to 2&hellip;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATE 4 — HAND-OFF -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:10px;padding-left:4px;">
+          <span style="font-size:12px;font-weight:600;color:#5B4FE9;background:#ECEAFB;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;">4</span>
+          <span style="font-size:13px;font-weight:600;letter-spacing:0.02em;color:#4A4560;">Hand-off</span>
+        </div>
+        <div style="width:392px;height:812px;background:#F7F6FC;border-radius:44px;padding:14px;box-sizing:border-box;box-shadow:0 24px 60px -30px rgba(64,48,32,0.4);">
+          <div style="width:100%;height:100%;border-radius:32px;background:#F7F6FC;box-sizing:border-box;padding:60px 30px 34px;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:36px;">
+              <div style="font-size:14px;color:#A39DBA;letter-spacing:0.03em;">Tuesday morning</div>
+              <div style="width:30px;height:30px;border-radius:50%;background:#ECE9F7;"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:26px;">
+              <div style="display:flex;gap:7px;align-items:center;">
+                <span style="width:9px;height:9px;border-radius:50%;background:#5B4FE9;animation:cc-dot 1.2s ease-in-out infinite;"></span>
+                <span style="width:9px;height:9px;border-radius:50%;background:#5B4FE9;animation:cc-dot 1.2s ease-in-out .18s infinite;"></span>
+                <span style="width:9px;height:9px;border-radius:50%;background:#5B4FE9;animation:cc-dot 1.2s ease-in-out .36s infinite;"></span>
+              </div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;color:#211D2E;background:linear-gradient(90deg,#211D2E 32%,#5B4FE9 50%,#211D2E 68%);background-size:280px 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:cc-shimmer 2s linear infinite;">Cooking up a draft&hellip;</div>
+              <div style="font-size:15px;color:#8A84A0;line-height:1.5;max-width:250px;">Misuq is shaping a first version for your preview audience. You&rsquo;ll get to read it before anything goes out.</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#AFA9C4;">
+              <span>Step 1 of 5</span>
+              <span style="opacity:.5;">·</span>
+              <span>Capture → Draft</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

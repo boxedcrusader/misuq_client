@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/*
+ * Misuq design tokens — see design_handoff_misuq_landing/README.md ("Theming (light + dark)" table).
+ * Light values live on :root; dark overrides apply via [data-theme="dark"], set on <html> by the
+ * blocking script in layout.tsx (before paint) and flipped by ThemeToggle. A few tokens (on-accent,
+ * on-panel-head/body) are intentionally constant across both themes — they sit on indigo/panel fills,
+ * not on the page background, so they never need to flip.
+ */
+:root {
+  --bg: #f7f6fc;
+  --surface: #ffffff;
+  --ink: #1b1830;
+  --body-copy: #4a4666;
+  --muted: #6e6990;
+  --label: #8e88be;
+  --faint: #9b96c4;
+  --border: #e3e0f4;
+  --border-2: #d3cfeb;
+  --pill-border: #dad6ef;
+  --accent: #5b4fe9;
+  --accent-hover: #4a3fd0;
+  --on-accent: #f7f6fc;
+  --panel: #1b1830;
+  --on-panel-head: #f3f1fe;
+  --on-panel-body: #b7b2d8;
+  --soft: #f4f2fc;
+  --soft-border: #e7e4f6;
+  --cta: #f0eefa;
+  --ring: rgba(91, 79, 233, 0.15);
+  --shadow-hero: 0 24px 60px -30px rgba(27, 24, 48, 0.25);
+  --shadow-feat: 0 24px 60px -30px rgba(91, 79, 233, 0.6);
+  --dot-1: #c7c2e8;
+  --dot-2: #8e84ee;
+  --dot-3: #5b4fe9;
+}
+
+:root[data-theme="dark"] {
+  --bg: #141221;
+  --surface: #201b33;
+  --ink: #f3f1fe;
+  --body-copy: #b7b2d8;
+  --muted: #9a93c2;
+  --label: #948dbe;
+  --faint: #7c76a4;
+  --border: #2f2a46;
+  --border-2: #3b3557;
+  --pill-border: #35304e;
+  --accent: #6c5ff0;
+  --accent-hover: #8579ff;
+  --panel: #251f3c;
+  --soft: #262038;
+  --soft-border: #332c4c;
+  --cta: #221d38;
+  --ring: rgba(124, 112, 240, 0.3);
+  --shadow-hero: 0 24px 60px -30px rgba(0, 0, 0, 0.6);
+  --shadow-feat: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+  --dot-1: #6e64c8;
+  --dot-3: #8579ff;
+}
+
+@theme inline {
+  --color-indigo: var(--accent);
+  --color-indigo-hover: var(--accent-hover);
+  --color-deep-ink: var(--ink);
+  --color-ground: var(--bg);
+  --color-card: var(--surface);
+  --color-on-indigo: var(--on-accent);
+  --color-panel: var(--panel);
+  --color-periwinkle: #c7c2e8;
+  --color-border-hairline: var(--border);
+  --color-border-input: var(--border-2);
+  --color-border-badge: var(--pill-border);
+  --color-text-muted: var(--body-copy);
+  --color-text-muted-2: var(--muted);
+  --color-text-muted-3: var(--label);
+  --color-text-faint: var(--faint);
+  --color-context-fill: var(--soft);
+  --color-context-border: var(--soft-border);
+  --color-cta-panel: var(--cta);
+  --color-on-dark-heading: #f3f1fe;
+  --color-on-dark-body: #b7b2d8;
+  --color-on-dark-muted: #dedbf0;
+  --color-logo-accent-mid: #8e84ee;
+  --color-dot-1: var(--dot-1);
+  --color-dot-2: var(--dot-2);
+  --color-dot-3: var(--dot-3);
+
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-deep-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+::selection {
+  background: var(--color-indigo);
+  color: var(--color-on-indigo);
+}
+
+a {
+  color: var(--color-indigo);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-indigo-hover);
+}

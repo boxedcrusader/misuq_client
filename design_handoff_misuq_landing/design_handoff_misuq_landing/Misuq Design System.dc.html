@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{ box-sizing: border-box; }
+    html,body{ margin:0; padding:0; background:#F7F6FC; }
+    ::selection{ background:#5B4FE9; color:#F7F6FC; }
+    a{ color:#5B4FE9; text-decoration:none; }
+    a:hover{ color:#4A3FD0; }
+  </style>
+</helmet>
+
+<div style="background:#F7F6FC; color:#1B1830; font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh; padding:96px 40px 140px;">
+  <div style="max-width:920px; margin:0 auto;">
+
+    <!-- MASTHEAD -->
+    <header style="display:flex; flex-direction:column; gap:28px; padding-bottom:72px; border-bottom:1px solid #E3E0F4;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="width:34px; height:34px; border-radius:9px; background:#5B4FE9; display:flex; align-items:center; justify-content:center;">
+          <div style="width:13px; height:13px; border-radius:3px; background:#F7F6FC;"></div>
+        </div>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px; letter-spacing:-0.01em;">Misuq</span>
+        <span style="font-family:'Inter',sans-serif; font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; padding:4px 9px; border:1px solid #DAD6EF; border-radius:999px;">Design System</span>
+      </div>
+      <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:48px; line-height:1.04; letter-spacing:-0.025em; margin:0; max-width:16ch;">The visual language of the marketing copilot.</h1>
+      <p style="font-size:17px; line-height:1.6; color:#4A4666; margin:0; max-width:60ch;">A single reference for the colors, type, and components used across Capture, Draft review, Report-back, and Graduate. Presented in the system's own vocabulary so it reads like the product, not a template.</p>
+    </header>
+
+    <!-- COLOR -->
+    <section style="padding-top:88px;">
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:40px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:500; color:#8E88BE;">01</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:26px; letter-spacing:-0.02em; margin:0;">Color</h2>
+        <span style="font-size:14px; color:#8E88BE;">Four roles. Restraint over range.</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:20px;">
+        <!-- primary -->
+        <div style="border:1px solid #E3E0F4; border-radius:16px; overflow:hidden; background:#FFFFFF;">
+          <div style="height:120px; background:#5B4FE9;"></div>
+          <div style="padding:20px 22px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-weight:600; font-size:15px;">Electric Indigo</span>
+              <code style="font-family:'Space Grotesk',sans-serif; font-size:14px; color:#5B4FE9; font-weight:500;">#5B4FE9</code>
+            </div>
+            <span style="font-size:13.5px; line-height:1.5; color:#6E6990;">Primary accent — CTAs, focus states, active selections.</span>
+          </div>
+        </div>
+        <!-- ink -->
+        <div style="border:1px solid #E3E0F4; border-radius:16px; overflow:hidden; background:#FFFFFF;">
+          <div style="height:120px; background:#1B1830;"></div>
+          <div style="padding:20px 22px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-weight:600; font-size:15px;">Deep Ink</span>
+              <code style="font-family:'Space Grotesk',sans-serif; font-size:14px; color:#5B4FE9; font-weight:500;">#1B1830</code>
+            </div>
+            <span style="font-size:13.5px; line-height:1.5; color:#6E6990;">Text — near-black with a violet undertone, never pure black.</span>
+          </div>
+        </div>
+        <!-- background -->
+        <div style="border:1px solid #E3E0F4; border-radius:16px; overflow:hidden; background:#FFFFFF;">
+          <div style="height:120px; background:#F7F6FC; border-bottom:1px solid #E3E0F4;"></div>
+          <div style="padding:20px 22px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-weight:600; font-size:15px;">Lavender Ground</span>
+              <code style="font-family:'Space Grotesk',sans-serif; font-size:14px; color:#5B4FE9; font-weight:500;">#F7F6FC</code>
+            </div>
+            <span style="font-size:13.5px; line-height:1.5; color:#6E6990;">Background — a pale lavender-white tint, not pure white.</span>
+          </div>
+        </div>
+        <!-- periwinkle -->
+        <div style="border:1px solid #E3E0F4; border-radius:16px; overflow:hidden; background:#FFFFFF;">
+          <div style="height:120px; background:#C7C2E8;"></div>
+          <div style="padding:20px 22px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span style="font-weight:600; font-size:15px;">Soft Periwinkle</span>
+              <code style="font-family:'Space Grotesk',sans-serif; font-size:14px; color:#5B4FE9; font-weight:500;">#C7C2E8</code>
+            </div>
+            <span style="font-size:13.5px; line-height:1.5; color:#6E6990;">Secondary — borders, placeholders, de-emphasized elements.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TYPOGRAPHY -->
+    <section style="padding-top:96px;">
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:40px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:500; color:#8E88BE;">02</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:26px; letter-spacing:-0.02em; margin:0;">Typography</h2>
+        <span style="font-size:14px; color:#8E88BE;">Two families, clear division of labor.</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:22px;">
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:20px; letter-spacing:-0.02em;">Space Grotesk</span>
+            <span style="font-size:12px; color:#8E88BE; letter-spacing:0.04em;">DISPLAY / PROMPT</span>
+          </div>
+          <p style="font-size:13.5px; line-height:1.55; color:#6E6990; margin:0;">Geometric sans with distinct character. Used where personality matters — headlines, display, and the prompts the copilot speaks in.</p>
+        </div>
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:22px;">
+            <span style="font-family:'Inter',sans-serif; font-weight:600; font-size:20px; letter-spacing:-0.01em;">Inter</span>
+            <span style="font-size:12px; color:#8E88BE; letter-spacing:0.04em;">BODY / UI</span>
+          </div>
+          <p style="font-size:13.5px; line-height:1.55; color:#6E6990; margin:0;">Clean and legible at small sizes. Carries body copy, UI labels, chat text, and buttons — everything read rather than felt.</p>
+        </div>
+      </div>
+
+      <!-- scale: space grotesk -->
+      <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:34px 36px; margin-bottom:24px;">
+        <div style="font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#8E88BE; margin-bottom:28px;">Space Grotesk — scale</div>
+        <div style="display:flex; flex-direction:column; gap:26px;">
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Display · 48</span>
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:48px; line-height:1.05; letter-spacing:-0.025em;">What'd you ship or learn?</span>
+          </div>
+          <div style="height:1px; background:#EFEDF8;"></div>
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Heading · 28</span>
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:28px; letter-spacing:-0.02em;">Here's a first draft for your list.</span>
+          </div>
+          <div style="height:1px; background:#EFEDF8;"></div>
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Body · 17</span>
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:17px; line-height:1.5;">Tell me how it landed and we'll take it wider.</span>
+          </div>
+          <div style="height:1px; background:#EFEDF8;"></div>
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Label · 13</span>
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:13px; letter-spacing:0.02em; text-transform:uppercase; color:#6E6990;">Ready to graduate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- scale: inter -->
+      <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:34px 36px;">
+        <div style="font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#8E88BE; margin-bottom:28px;">Inter — scale</div>
+        <div style="display:flex; flex-direction:column; gap:26px;">
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Display · 40</span>
+            <span style="font-family:'Inter',sans-serif; font-weight:600; font-size:40px; line-height:1.08; letter-spacing:-0.02em;">Attention, drafted for you.</span>
+          </div>
+          <div style="height:1px; background:#EFEDF8;"></div>
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Heading · 24</span>
+            <span style="font-family:'Inter',sans-serif; font-weight:600; font-size:24px; letter-spacing:-0.015em;">Your preview audience replied.</span>
+          </div>
+          <div style="height:1px; background:#EFEDF8;"></div>
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Body · 16</span>
+            <span style="font-family:'Inter',sans-serif; font-weight:400; font-size:16px; line-height:1.6; max-width:52ch;">Drop in a raw update — a shipped feature, a milestone, a lesson. I'll shape it into something worth sending, and you decide when it's ready to go wider.</span>
+          </div>
+          <div style="height:1px; background:#EFEDF8;"></div>
+          <div style="display:flex; align-items:baseline; gap:24px;">
+            <span style="flex:0 0 96px; font-family:'Inter',sans-serif; font-size:12px; color:#9B96C4;">Small · 13</span>
+            <span style="font-family:'Inter',sans-serif; font-weight:500; font-size:13px; color:#6E6990;">Sent to 42 people on your list · 2 days ago</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS -->
+    <section style="padding-top:96px;">
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:40px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:500; color:#8E88BE;">03</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:26px; letter-spacing:-0.02em; margin:0;">Components</h2>
+        <span style="font-size:14px; color:#8E88BE;">The parts, in isolation.</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:22px;">
+
+        <!-- Buttons -->
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px;">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; margin-bottom:22px;">Buttons</div>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:15px; color:#F7F6FC; background:#5B4FE9; border:none; border-radius:11px; padding:12px 22px; cursor:pointer;">Send to my list</button>
+            <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:15px; color:#3A3557; background:transparent; border:1px solid #D3CFEB; border-radius:11px; padding:12px 22px; cursor:pointer;">Edit draft</button>
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#8E88BE; margin-top:18px;">Primary carries one action per view. Secondary is quiet — outline only, no fill.</div>
+        </div>
+
+        <!-- Chips -->
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px;">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; margin-bottom:22px;">Tags · skippable</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <span style="font-family:'Inter',sans-serif; font-size:14px; font-weight:500; color:#F7F6FC; background:#5B4FE9; border:1px solid #5B4FE9; border-radius:999px; padding:7px 15px;">Shipped a feature</span>
+            <span style="font-family:'Inter',sans-serif; font-size:14px; font-weight:450; color:#5A5580; background:transparent; border:1px solid #D3CFEB; border-radius:999px; padding:7px 15px;">Milestone</span>
+            <span style="font-family:'Inter',sans-serif; font-size:14px; font-weight:450; color:#5A5580; background:transparent; border:1px solid #D3CFEB; border-radius:999px; padding:7px 15px;">Lesson learned</span>
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#8E88BE; margin-top:18px;">Selected fills indigo; unselected stay outlined. All optional — none required to proceed.</div>
+        </div>
+
+        <!-- Text input -->
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px; grid-column:1 / -1;">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; margin-bottom:22px;">Input & textarea</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div style="display:flex; flex-direction:column; gap:9px;">
+              <span style="font-size:13px; color:#8E88BE;">Default</span>
+              <div style="font-family:'Inter',sans-serif; font-size:15px; color:#9B96C4; background:#FBFAFE; border:1px solid #D3CFEB; border-radius:11px; padding:13px 15px;">What'd you ship or learn?</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:9px;">
+              <span style="font-size:13px; color:#8E88BE;">Focus state</span>
+              <div style="font-family:'Inter',sans-serif; font-size:15px; color:#1B1830; background:#FFFFFF; border:1px solid #5B4FE9; border-radius:11px; padding:13px 15px; box-shadow:0 0 0 3px rgba(91,79,233,0.15);">Shipped one-click CSV export<span style="display:inline-block; width:1.5px; height:17px; background:#5B4FE9; margin-left:1px; vertical-align:-3px;"></span></div>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:9px; margin-top:20px;">
+            <span style="font-size:13px; color:#8E88BE;">Textarea</span>
+            <div style="font-family:'Inter',sans-serif; font-size:15px; line-height:1.55; color:#1B1830; background:#FFFFFF; border:1px solid #5B4FE9; border-radius:11px; padding:14px 16px; min-height:88px; box-shadow:0 0 0 3px rgba(91,79,233,0.15);">Shipped one-click CSV export this week. Two beta users had asked for it — one replied within an hour saying it saved her whole afternoon.</div>
+          </div>
+        </div>
+
+        <!-- Chat bubbles -->
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px; grid-column:1 / -1;">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; margin-bottom:22px;">Chat · agent & founder</div>
+          <div style="display:flex; flex-direction:column; gap:14px; max-width:640px;">
+            <div style="align-self:flex-start; max-width:78%; background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px 16px 16px 5px; padding:14px 18px;">
+              <span style="font-family:'Inter',sans-serif; font-size:15px; line-height:1.55; color:#2C2846;">How did it land? Tell me in your own words — replies, signups, silence, anything.</span>
+            </div>
+            <div style="align-self:flex-end; max-width:78%; background:#5B4FE9; border-radius:16px 16px 5px 16px; padding:14px 18px;">
+              <span style="font-family:'Inter',sans-serif; font-size:15px; line-height:1.55; color:#F3F1FE;">Three replies and two signups. One person said the CSV bit was exactly what they needed.</span>
+            </div>
+            <div style="align-self:flex-start; max-width:78%; background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px 16px 16px 5px; padding:14px 18px;">
+              <span style="font-family:'Inter',sans-serif; font-size:15px; line-height:1.55; color:#2C2846;">Small room, but a clear signal. Want to take this one wider?</span>
+            </div>
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#8E88BE; margin-top:18px;">Agent left, on lavender ground with a hairline border. Founder right, indigo fill. No avatars, no chrome.</div>
+        </div>
+
+        <!-- Context card -->
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px;">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; margin-bottom:22px;">Context card</div>
+          <div style="background:#F4F2FC; border:1px solid #E7E4F6; border-radius:12px; padding:16px 18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:9px;">
+              <div style="width:6px; height:6px; border-radius:2px; background:#B4AEDC;"></div>
+              <span style="font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#9089BC;">Original capture</span>
+            </div>
+            <p style="font-family:'Inter',sans-serif; font-size:14px; line-height:1.55; color:#6E6990; margin:0;">"Shipped one-click CSV export this week. Two beta users had asked for it."</p>
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#8E88BE; margin-top:18px;">De-emphasized. Holds prior context — a captured input or earlier draft — without competing for attention.</div>
+        </div>
+
+        <!-- Confirmation micro-copy -->
+        <div style="background:#FFFFFF; border:1px solid #E3E0F4; border-radius:16px; padding:28px 30px;">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#8E88BE; margin-bottom:22px;">Confirmation · hand-off</div>
+          <div style="display:flex; align-items:flex-start; gap:11px;">
+            <div style="flex:0 0 20px; width:20px; height:20px; border-radius:6px; background:#5B4FE9; display:flex; align-items:center; justify-content:center; margin-top:2px;">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#F7F6FC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:17px; letter-spacing:-0.01em; color:#1B1830;">Sent. It's with your list now.</div>
+              <div style="font-family:'Inter',sans-serif; font-size:14px; line-height:1.5; color:#6E6990; margin-top:4px;">No rush — come back and tell me how it lands whenever you're ready.</div>
+            </div>
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#8E88BE; margin-top:18px;">Warm and minimal. Acknowledges, then steps back.</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VOICE / TONE -->
+    <section style="padding-top:96px;">
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:40px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:500; color:#8E88BE;">04</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:26px; letter-spacing:-0.02em; margin:0;">Voice & tone</h2>
+        <span style="font-size:14px; color:#8E88BE;">How the whole thing should feel.</span>
+      </div>
+
+      <div style="background:#1B1830; border-radius:20px; padding:52px 56px; color:#DEDBF0;">
+        <p style="font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:27px; line-height:1.45; letter-spacing:-0.015em; color:#F3F1FE; margin:0 0 34px; max-width:30ch;">Minimal but not cold. Confident and considered, never decorative.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px 48px; font-family:'Inter',sans-serif; font-size:15.5px; line-height:1.65; color:#B7B2D8;">
+          <p style="margin:0;">No dashboard chrome. No heavy borders or drop shadows doing decorative work — structure comes from space and hairlines, not boxes.</p>
+          <p style="margin:0;">Generous whitespace. The interface breathes; nothing is crowded to fit more in.</p>
+          <p style="margin:0;">Low-friction and founder-paced. The copilot waits on the founder, not the other way around.</p>
+          <p style="margin:0;">No urgency-driven or countdown UI. No streaks, timers, or manufactured pressure — validation happens when the founder says it's ready.</p>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:80px; font-family:'Inter',sans-serif; font-size:13px; color:#A29CCB;">Misuq Design System · reference v1</div>
+    </section>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; background:#F7F6FC; }
+    ::selection{ background:#5B4FE9; color:#F7F6FC; }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ color:var(--accent-hover); }
+    #misuq-root{
+      --bg:#F7F6FC; --surface:#FFFFFF; --ink:#1B1830; --body:#4A4666;
+      --muted:#6E6990; --label:#8E88BE; --faint:#9B96C4;
+      --border:#E3E0F4; --border2:#D3CFEB; --pill-border:#DAD6EF;
+      --accent:#5B4FE9; --accent-hover:#4A3FD0; --on-accent:#F7F6FC;
+      --panel:#1B1830; --on-panel-head:#F3F1FE; --on-panel-body:#B7B2D8;
+      --soft:#F4F2FC; --soft-border:#E7E4F6; --cta:#F0EEFA;
+      --shadow-hero:0 24px 60px -30px rgba(27,24,48,0.25);
+      --shadow-feat:0 24px 60px -30px rgba(91,79,233,0.6);
+      --ring:rgba(91,79,233,0.15);
+      --dot1:#C7C2E8; --dot2:#8E84EE; --dot3:#5B4FE9;
+      --track:#DAD6EF;
+      transition:background .35s ease, color .35s ease;
+    }
+    #misuq-root[data-theme="dark"]{
+      --bg:#141221; --surface:#201B33; --ink:#F3F1FE; --body:#B7B2D8;
+      --muted:#9A93C2; --label:#948DBE; --faint:#7C76A4;
+      --border:#2F2A46; --border2:#3B3557; --pill-border:#35304E;
+      --accent:#6C5FF0; --accent-hover:#8579FF; --on-accent:#F7F6FC;
+      --panel:#251F3C; --on-panel-head:#F3F1FE; --on-panel-body:#B7B2D8;
+      --soft:#262038; --soft-border:#332C4C; --cta:#221D38;
+      --shadow-hero:0 24px 60px -30px rgba(0,0,0,0.6);
+      --shadow-feat:0 24px 60px -30px rgba(0,0,0,0.7);
+      --ring:rgba(124,112,240,0.3);
+      --dot1:#6E64C8; --dot2:#8E84EE; --dot3:#8579FF;
+      --track:#3A3556;
+    }
+  </style>
+</helmet>
+
+<div id="misuq-root" data-theme="{{ theme }}" style="background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh;">
+
+  <!-- NAV -->
+  <nav style="max-width:1080px; margin:0 auto; padding:28px 40px; display:flex; align-items:center; justify-content:space-between;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <svg width="30" height="30" viewBox="0 0 132 132" fill="none"><circle cx="24" cy="96" r="10" fill="var(--dot1)"/><circle cx="66" cy="80" r="16" fill="var(--dot2)"/><circle cx="112" cy="54" r="22" fill="var(--dot3)"/></svg>
+      <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">Misuq</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:28px;">
+      <a href="#how" style="font-size:14.5px; font-weight:450; color:var(--body);">How it works</a>
+      <a href="#pricing" style="font-size:14.5px; font-weight:450; color:var(--body);">Pricing</a>
+      <button onClick="{{ toggleTheme }}" aria-label="Toggle theme" style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background:transparent; border:1px solid var(--border2); color:var(--body); cursor:pointer; padding:0;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:15px; line-height:1;">{{ themeIcon }}</span>
+      </button>
+      <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:14.5px; color:var(--on-accent); background:var(--accent); border:none; border-radius:10px; padding:10px 18px; cursor:pointer;">Start free</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header style="max-width:1080px; margin:0 auto; padding:80px 40px 96px; display:grid; grid-template-columns:1.05fr 0.95fr; gap:64px; align-items:center;">
+    <div style="display:flex; flex-direction:column; gap:28px;">
+      <span style="align-self:flex-start; font-size:12px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); padding:6px 13px; border:1px solid var(--pill-border); border-radius:999px;">For indie SaaS founders</span>
+      <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:58px; line-height:1.02; letter-spacing:-0.03em; margin:0;">Shipping got easy. Getting noticed didn't.</h1>
+      <p style="font-size:19px; line-height:1.6; color:var(--body); margin:0; max-width:46ch;">Misuq is a marketing copilot that drafts your build-in-public updates, tests them on your own small audience first, and only takes the winners wider. You approve everything. Nothing posts on its own.</p>
+      <div style="display:flex; gap:14px; align-items:center; margin-top:8px;">
+        <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:16px; color:var(--on-accent); background:var(--accent); border:none; border-radius:12px; padding:14px 26px; cursor:pointer;">Draft my first update</button>
+        <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:16px; color:var(--ink); background:transparent; border:1px solid var(--border2); border-radius:12px; padding:14px 26px; cursor:pointer;">See how it works</button>
+      </div>
+      <div style="font-size:13.5px; color:var(--label); margin-top:4px;">No card required · No auto-posting, ever · Founder-paced</div>
+    </div>
+
+    <!-- hero chat visual -->
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px; box-shadow:var(--shadow-hero);">
+      <div style="font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); margin-bottom:20px;">Capture</div>
+      <div style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:22px; letter-spacing:-0.015em; color:var(--ink); margin-bottom:18px;">What'd you ship or learn?</div>
+      <div style="font-family:'Inter',sans-serif; font-size:15px; line-height:1.55; color:var(--ink); background:var(--surface); border:1px solid var(--accent); border-radius:12px; padding:14px 16px; box-shadow:0 0 0 3px var(--ring); min-height:74px;">Shipped one-click CSV export. Two beta users had asked for it.</div>
+      <div style="display:flex; flex-direction:column; gap:12px; margin-top:22px;">
+        <div style="align-self:flex-start; max-width:88%; background:var(--soft); border:1px solid var(--soft-border); border-radius:14px 14px 14px 4px; padding:12px 16px; font-size:14.5px; line-height:1.5; color:var(--ink);">Nice — that's a “someone asked, I built it” story. Draft ready for your list?</div>
+        <div style="display:flex; gap:10px; align-self:flex-start;">
+          <span style="font-size:13px; font-weight:500; color:var(--on-accent); background:var(--accent); border-radius:999px; padding:6px 13px;">Draft it</span>
+          <span style="font-size:13px; font-weight:450; color:var(--muted); background:transparent; border:1px solid var(--border2); border-radius:999px; padding:6px 13px;">Add context</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PROBLEM -->
+  <section style="background:var(--panel); color:var(--on-panel-body);">
+    <div style="max-width:1080px; margin:0 auto; padding:96px 40px; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;">
+      <p style="font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:34px; line-height:1.32; letter-spacing:-0.02em; color:var(--on-panel-head); margin:0;">AI made building cheap. So everyone's building. The scarce thing now is anyone noticing.</p>
+      <div style="display:flex; flex-direction:column; gap:22px; font-family:'Inter',sans-serif; font-size:16.5px; line-height:1.65; color:var(--on-panel-body);">
+        <p style="margin:0;">You ship constantly. Marketing is the part that slips — you don't have a schedule, a strategy, or the hours to figure out what lands.</p>
+        <p style="margin:0;">Generic AI copy makes it worse. People can tell, and they punish it. What you need isn't more posts — it's knowing which ones are worth sending before you spend your audience on them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" style="max-width:1080px; margin:0 auto; padding:112px 40px;">
+    <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:56px; max-width:52ch;">
+      <span style="font-size:12px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--label);">How it works</span>
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:38px; line-height:1.08; letter-spacing:-0.025em; margin:0;">Preview it in the small room before opening night.</h2>
+      <p style="font-size:17px; line-height:1.6; color:var(--body); margin:0;">Every story gets tested on people who already know you, so you learn what works before it hits a cold, public audience.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:20px;">
+      <div style="display:flex; flex-direction:column; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 22px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--accent);">01</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">Capture</span>
+        <span style="font-size:14px; line-height:1.55; color:var(--muted);">Drop in a raw update — a shipped feature, a milestone, a lesson.</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 22px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--accent);">02</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">Draft</span>
+        <span style="font-size:14px; line-height:1.55; color:var(--muted);">The copilot shapes it into a first version for your preview list.</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 22px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--accent);">03</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">Send</span>
+        <span style="font-size:14px; line-height:1.55; color:var(--muted);">You send it to your own small audience. You're always in control.</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 22px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:var(--accent);">04</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">Report back</span>
+        <span style="font-size:14px; line-height:1.55; color:var(--muted);">Tell it how it landed, in plain words — replies, signups, silence.</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; background:var(--accent); border:1px solid var(--accent); border-radius:16px; padding:24px 22px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600; color:#C9C3FF;">05</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em; color:#FFFFFF;">Graduate</span>
+        <span style="font-size:14px; line-height:1.55; color:#DCD8FB;">When you say it's ready, it's reshaped for X, LinkedIn, and beyond.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORT-BACK DEMO -->
+  <section style="max-width:1080px; margin:0 auto; padding:0 40px 112px;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:56px; display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center;">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <span style="font-size:12px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--label);">Report back</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:32px; line-height:1.1; letter-spacing:-0.02em; margin:0;">It learns your voice from what actually landed.</h2>
+        <p style="font-size:16px; line-height:1.62; color:var(--body); margin:0;">No forms, no dashboards. Just tell the copilot how it went. Over time it remembers the angles and tone that work for your audience — and flags when the signal's too small to trust.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:13px;">
+        <div style="align-self:flex-start; max-width:80%; background:var(--soft); border:1px solid var(--soft-border); border-radius:16px 16px 16px 5px; padding:14px 18px; font-size:15px; line-height:1.55; color:var(--ink);">How did the CSV update land?</div>
+        <div style="align-self:flex-end; max-width:80%; background:var(--accent); border-radius:16px 16px 5px 16px; padding:14px 18px; font-size:15px; line-height:1.55; color:#F3F1FE;">Three replies, two signups. One said it was exactly what she needed.</div>
+        <div style="align-self:flex-start; max-width:80%; background:var(--soft); border:1px solid var(--soft-border); border-radius:16px 16px 16px 5px; padding:14px 18px; font-size:15px; line-height:1.55; color:var(--ink);">Small room, but a clear signal. Want to take this one to X?</div>
+        <div style="align-self:flex-start; display:flex; align-items:center; gap:9px; margin-top:4px; padding-left:2px;">
+          <div style="width:18px; height:18px; border-radius:6px; background:var(--accent); display:flex; align-items:center; justify-content:center;">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#F7F6FC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:14px; color:var(--muted);">Graduated to a validated story</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="max-width:1080px; margin:0 auto; padding:0 40px 120px;">
+    <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:52px; max-width:48ch;">
+      <span style="font-size:12px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--label);">Pricing</span>
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:38px; line-height:1.08; letter-spacing:-0.025em; margin:0;">Flat tiers. No per-draft metering.</h2>
+      <p style="font-size:17px; line-height:1.6; color:var(--body); margin:0;">The loop is meant to be slow and considered, so you're never charged to think.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:22px;">
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:32px 30px; display:flex; flex-direction:column; gap:22px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px;">Starter</span>
+          <div style="display:flex; align-items:baseline; gap:4px;"><span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; letter-spacing:-0.02em;">$19</span><span style="font-size:15px; color:var(--label);">/mo</span></div>
+          <span style="font-size:14px; line-height:1.5; color:var(--muted);">One email list, one wide channel. Unlimited drafts and staging.</span>
+        </div>
+        <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:15px; color:var(--ink); background:transparent; border:1px solid var(--border2); border-radius:11px; padding:12px; cursor:pointer;">Choose Starter</button>
+      </div>
+
+      <div style="background:var(--accent); border:1px solid var(--accent); border-radius:18px; padding:32px 30px; display:flex; flex-direction:column; gap:22px; box-shadow:var(--shadow-feat);">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px; color:#FFFFFF;">Growth</span>
+            <span style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); background:#F3F1FE; border-radius:999px; padding:4px 10px;">Popular</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:4px;"><span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; letter-spacing:-0.02em; color:#FFFFFF;">$49</span><span style="font-size:15px; color:#C9C3FF;">/mo</span></div>
+          <span style="font-size:14px; line-height:1.5; color:#DCD8FB;">Three channels, plus voice and tone memory across your stories.</span>
+        </div>
+        <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:15px; color:var(--accent); background:#F7F6FC; border:none; border-radius:11px; padding:12px; cursor:pointer;">Choose Growth</button>
+      </div>
+
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:32px 30px; display:flex; flex-direction:column; gap:22px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px;">Scale</span>
+          <div style="display:flex; align-items:baseline; gap:4px;"><span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; letter-spacing:-0.02em;">$99</span><span style="font-size:15px; color:var(--label);">/mo</span></div>
+          <span style="font-size:14px; line-height:1.5; color:var(--muted);">Unlimited channels and priority access to cross-founder insights.</span>
+        </div>
+        <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:15px; color:var(--ink); background:transparent; border:1px solid var(--border2); border-radius:11px; padding:12px; cursor:pointer;">Choose Scale</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING CTA -->
+  <section style="max-width:1080px; margin:0 auto; padding:0 40px 120px;">
+    <div style="background:var(--cta); border:1px solid var(--border); border-radius:24px; padding:72px 56px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:22px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:42px; line-height:1.06; letter-spacing:-0.025em; margin:0; max-width:20ch;">You built it. Let's get it noticed.</h2>
+      <p style="font-size:17px; line-height:1.6; color:var(--body); margin:0; max-width:44ch;">Start with one update. See a draft in minutes. Nothing goes out until you say so.</p>
+      <button style="font-family:'Inter',sans-serif; font-weight:500; font-size:16px; color:var(--on-accent); background:var(--accent); border:none; border-radius:12px; padding:15px 30px; cursor:pointer; margin-top:6px;">Draft my first update</button>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid var(--border);">
+    <div style="max-width:1080px; margin:0 auto; padding:34px 40px; display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 132 132" fill="none"><circle cx="24" cy="96" r="10" fill="var(--dot1)"/><circle cx="66" cy="80" r="16" fill="var(--dot2)"/><circle cx="112" cy="54" r="22" fill="var(--dot3)"/></svg>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px;">Misuq</span>
+      </div>
+      <span style="font-size:13.5px; color:var(--label);">The marketing copilot for indie SaaS founders.</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: 'light' };
+  componentDidMount() {
+    try {
+      const saved = localStorage.getItem('misuq-theme');
+      if (saved === 'dark' || saved === 'light') this.setState({ theme: saved });
+    } catch (e) {}
+  }
+  renderVals() {
+    const theme = this.state.theme;
+    return {
+      theme,
+      themeIcon: theme === 'dark' ? '☾' : '☀',
+      toggleTheme: () => {
+        const next = this.state.theme === 'dark' ? 'light' : 'dark';
+        this.setState({ theme: next });
+        try { localStorage.setItem('misuq-theme', next); } catch (e) {}
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

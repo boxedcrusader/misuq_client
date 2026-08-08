@@ -1,0 +1,83 @@
+# Misuq — Frontend (client/)
+
+Scope note: this file covers `client/` only (web + mobile). The backend lives in `../service` and is owned separately — do not edit it from here. The backend's own project brief is `../README.md` / `../CLAUDE.md`.
+
+**Maintenance rule: update this file after every task completed in `client/`** — add what changed, don't just leave it stale. Keep entries short; link to files instead of pasting code.
+
+---
+
+## What this is
+
+Marketing landing page for Misuq (AI marketing copilot for indie SaaS founders), built twice:
+- `client/web` — Next.js 16 (App Router, Turbopack) + Tailwind v4, for desktop/browser.
+- `client/mobile` — Expo (React Native + TypeScript), for the native mobile view.
+
+Both are independent projects (not a monorepo/workspace) that each carry their own copy of the same design tokens. This was a deliberate choice over a shared `packages/tokens` workspace — keep it that way unless asked to change it.
+
+## Design source of truth
+
+`client/design_handoff_misuq_landing/` — do not edit these files, they're the reference:
+- `README.md` — full design token table (colors, type scale, radii, shadows, layout, copy) and section-by-section spec. This is the primary spec to check against, more reliable to read than the `.dc.html` files.
+- `Misuq Landing.dc.html` — reference markup/inline-styles for the landing page (ignore the `<x-dc>`/`support.js` authoring runtime, only markup+styles+copy matter).
+- `Misuq Design System.dc.html`, `Misuq Logo.dc.html` — supporting references, already folded into the README's token table.
+
+Each app keeps its own token mirror:
+- `client/web/src/lib/tokens.ts` + `client/web/src/app/globals.css` (`@theme` block — Tailwind utility colors like `bg-indigo`, `text-deep-ink`, etc.)
+- `client/mobile/src/lib/tokens.ts` (`colors`, `fonts`, `radii`, `spacing` consts used directly in `StyleSheet.create`)
+
+If the design handoff changes, update both token files by hand — there's no codegen link between them.
+
+## Structure
+
+```
+client/web/src/
+  app/               layout.tsx (fonts, metadata), page.tsx (composes sections), globals.css (tokens)
+  components/        Nav, Hero, Problem, HowItWorks, ReportBack, Pricing, ClosingCta, Footer, Logo
+  lib/tokens.ts
+
+client/mobile/
+  App.tsx            loads fonts (expo-font + @expo-google-fonts/*), renders LandingScreen
+  src/screens/LandingScreen.tsx   composes sections inside a ScrollView
+  src/components/    Nav, Hero, Problem, HowItWorks, ReportBack, Pricing, ClosingCta, Footer, Logo, Button, ChatBubble
+  src/lib/tokens.ts
+```
+
+Section components are 1:1 with the design handoff's "Screens / Views" list (nav, hero, problem statement, 5-step how-it-works, report-back chat demo, 3-tier pricing, closing CTA, footer). Mobile collapses the 5-col and 3-col grids to single-column stacks (no responsive breakpoints needed since it's always phone-width); web collapses via Tailwind `sm:`/`md:` breakpoints.
+
+## Status
+
+- [x] Web landing page — all 8 sections built, verified pixel-close against the design reference in-browser.
+- [x] Mobile landing page — all 8 sections built as native RN components, verified via `expo start --web`.
+- [x] Nav bug fixed (2026-08-08): `<nav>` in `client/web/src/components/Nav.tsx` was collapsing to shrink-to-fit width instead of stretching full-width inside its flex-column parent, squeezing the wordmark and links together in the middle of the bar. Root cause looked like a Reader-Mode-style browser extension present in the automated Chrome session (`data-rm-theme`, `hentry`/`entry-content`, `rm-toolbar` markup appearing in the live DOM) interfering with `<nav>` layout specifically — never fully confirmed. Fixed defensively by adding `w-full` to the nav's className so it can't collapse regardless of the cause. If nav spacing ever looks broken again, check this first.
+- [x] Scroll-triggered reveal animations added (2026-08-08): each section (Hero → Footer, Nav excluded) fades + slides up as it enters the viewport.
+  - Web: `client/web/src/components/Reveal.tsx`, a client component using `IntersectionObserver` + Tailwind `transition-all` classes (`opacity`/`translate-y`), fires once per section and disconnects. Respects `motion-reduce`. Wrapped around each section in `client/web/src/app/page.tsx`.
+  - Mobile: `client/mobile/src/components/Reveal.tsx`, no new deps — uses RN's built-in `Animated` API. `LandingScreen.tsx` drives an `Animated.Value` off `ScrollView`'s `onScroll` (native driver); each `Reveal` measures its own Y offset via `onLayout` and interpolates opacity/translateY off that shared scroll value (scroll-linked, reversible on scroll-up, not a fixed-duration timer).
+  - Verified in-browser (Chrome tool) on both `next dev` (localhost:3000) and `expo start --web` (localhost:8081): sections fade/slide in on scroll, no console errors.
+- [x] Real logo assets swapped in (2026-08-08): the founder added final SVGs at `client/design_handoff_misuq_landing/design_handoff_misuq_landing/logos/` (`misuq-mark(.dark).svg`, `misuq-lockup(.dark).svg`, `misuq-app-icon.svg`). `client/web/src/components/Logo.tsx` and `client/mobile/src/components/Logo.tsx` already matched `misuq-mark.svg` exactly (same coords/colors) — no change needed there. What was still on generic Expo/Next placeholders and got replaced:
+  - Web: `client/web/src/app/icon.svg` added (Next.js file-convention favicon) = `misuq-app-icon.svg` as-is. `client/web/src/app/favicon.ico` regenerated (16/32/48px) from the same mark for older-browser fallback.
+  - Mobile (`client/mobile/assets/`, all regenerated from the SVGs via ImageMagick `convert`, no new deps): `icon.png` and `favicon.png` = `misuq-app-icon.svg` rendered at size. `splash-icon.png` = light-mode mark alone (transparent, ~55% canvas, centered on bbox) since splash bg stays white. `android-icon-foreground.png` = mark in the app-icon's light dot tones on transparent, padded to adaptive-icon safe zone; `android-icon-background.png` = solid `#5B4FE9`; `android-icon-monochrome.png` = flat-black silhouette (system re-tints). `app.json`'s `adaptiveIcon.backgroundColor` updated from the old placeholder `#E6F4FE` to `#5B4FE9` to match.
+  - Dark-mode mark/lockup variants exist in the handoff — since 2026-08-08 they're wired up (see dark mode entry below), driving the logo dots' `dot1`/`dot3` colors in dark theme.
+- [x] Dark mode added (2026-08-08): the founder added a "Theming (light + dark)" token table + toggle spec to the design handoff (`design_handoff_misuq_landing/design_handoff_misuq_landing/README.md` and `Misuq Landing.dc.html` — the nested-folder copies, not the top-level originals, carry this; check there first if the handoff changes again). Both apps default to the OS/browser preference on first load and let a nav toggle (sun/moon icon) override it — confirmed with the founder this is the intended behavior, not toggle-only or auto-only.
+  - Web: `client/web/src/app/globals.css` now defines every color as a CSS custom property on `:root` (light) and `:root[data-theme="dark"]` (dark), values taken verbatim from the handoff's token table. Tailwind's `@theme inline` maps existing utility names (`bg-ground`, `text-deep-ink`, `bg-indigo`, etc.) to those vars, so most components needed zero changes — the flip is free. New tokens added: `card` (was `bg-white` on cards), `panel` (Problem section's always-dark bg, itself now theme-aware per spec — `#1B1830` light / `#251F3C` dark), `on-indigo` (fixed light swatch for text/icons on indigo fills, was incorrectly reusing `ground` before). `client/web/src/app/layout.tsx` has a blocking inline `<script>` that reads `localStorage['misuq-theme']`, falls back to `matchMedia('(prefers-color-scheme: dark)')`, and sets `data-theme` on `<html>` before paint (no flash); `suppressHydrationWarning` on `<html>` silences the resulting (expected, harmless) hydration diff. `client/web/src/components/ThemeToggle.tsx` is the nav toggle, persists to the same localStorage key.
+  - Mobile: `client/mobile/src/lib/tokens.ts` now exports both `colors` (light) and `darkColors`. `client/mobile/src/lib/theme.ts`'s `useColors()`/`useIsDark()` pick between them based on `useColorScheme()`, with a manual override layered on top via `useSyncExternalStore` — needed because `react-native-web`'s `Appearance` module has no `setColorScheme` (it's hard-wired to the OS media query), so a toggle built only on the native `Appearance.setColorScheme` API is silently inert in `expo start --web`, the only environment this app is currently verified in. The override store still calls `Appearance.setColorScheme` where available so native call sites relying on system scheme directly stay in sync. **No persistence lib is installed**, so on mobile the toggle's override resets to system preference on reload/relaunch (unlike web's localStorage persistence) — flagged here so it's not mistaken for a bug later; revisit if/when a storage dependency gets added for other reasons. Every component that reads color went from a static `colors` import + module-scope `StyleSheet.create` to a `useColors()` hook + `getStyles(colors)` factory called with `useMemo` inside the component body, since RN has no CSS cascade to drive the flip declaratively.
+  - Verified in-browser on both `next dev` and `expo start --web`: toggle flips all 8 sections correctly in both directions, persists (web) across reload, no console errors beyond the pre-existing reader-mode-extension noise on `<body>` (see Nav bug entry above — unrelated, not introduced by this change).
+- [ ] CTAs ("Draft my first update", "Start free", pricing "Choose *" buttons) are visual-only — no click behavior wired up yet. Design handoff explicitly specs this page as static/no-interaction, so this is expected, not a bug. Will need wiring once there's an auth/signup flow to point at (backend side, out of scope here).
+- [ ] Not yet tested on a real device via Expo Go — only verified through `expo start --web`. New app icons/splash in particular should get a real-device or EAS-build check since only the raster PNGs were verified by eye, not an actual native install.
+
+## Running
+
+```bash
+# web
+cd client/web && npm run dev        # http://localhost:3000
+
+# mobile (web preview)
+cd client/mobile && npx expo start --web   # http://localhost:8081
+# mobile (real device) — scan the QR code with Expo Go
+cd client/mobile && npx expo start
+```
+
+## Environment notes
+
+- No global `pnpm` binary on this machine; `corepack enable` and `npm i -g pnpm` both fail on permissions. Use `npx --yes pnpm@latest <cmd>` — works fine, just resolves pnpm on each invocation.
+- Registry downloads have been slow/flaky here (pnpm install for `client/web` timed out twice with `ETIMEDOUT`/`ERR_PNPM_UNEXPECTED_STORE` on retry before succeeding on the third attempt with `--network-concurrency 4` and a bumped `fetch-timeout`). If installs hang, that's most likely the network, not a config problem — retry before debugging further.
+- `client/web/CLAUDE.md` and `client/mobile/CLAUDE.md` are tool-managed pointer files (`@AGENTS.md`), regenerated by `next dev` / `expo`/create-expo-app respectively — don't hand-edit them or fight their content. This file is the one to keep updated.
