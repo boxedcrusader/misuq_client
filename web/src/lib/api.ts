@@ -11,6 +11,10 @@
 //   - StoryWithContentPieces   <- CaptureController's GET /stories/:id (findOne, which
 //                                 `include: { contentPieces: true }`s)
 //   - PaginatedStories         <- CaptureController's GET /stories (findAll)
+//   - CreateReportRequest      <- service/src/modules/report-back/dto/create-report.dto.ts
+//   - SendWithContentPiece     <- SendController's GET /sends/:id (findOne, which
+//                                 `include: { contentPiece: { include: { story: true } } }`s)
+//   - ReportResult             <- ReportBackController's POST /reports response
 // If a field name or shape here ever differs from the real DTO/model, that's
 // a bug in THIS file to fix, not something to paper over client-side.
 
@@ -53,6 +57,8 @@ export type Tone =
   | "OTHER";
 export type ContentPieceStatus = "DRAFTED" | "EDITED" | "SENT";
 export type AudienceType = "EMAIL_LIST" | "DISCORD" | "BETA_USERS" | "PEERS";
+export type Sentiment = "POSITIVE" | "NEUTRAL" | "MIXED" | "NEGATIVE";
+export type PostFormat = "SINGLE" | "THREAD" | "QUOTE" | "REPLY" | "LONGFORM";
 
 // ── Response shapes (verified live against the running backend) ────────
 export interface Story {
@@ -101,6 +107,60 @@ export interface Send {
   updatedAt: string;
 }
 
+export interface PaginatedSends {
+  data: Send[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+// GET /sends/:id (findOne) enriches the bare Send with its ContentPiece and
+// that piece's Story — everything the report-back picker needs EXCEPT the
+// Audience (not included by this endpoint; resolved via DEV_AUDIENCES
+// locally instead, same as the Send screen).
+export interface SendWithContentPiece extends Send {
+  contentPiece: ContentPiece & { story: Story };
+}
+
+// Every field the stub extractor can fill in — see
+// service/src/modules/report-back/extraction/extraction.provider.ts.
+// null preserved throughout (unreported, never coerced to 0/false); this
+// screen never renders these values, only the request/response shape needs
+// to be typed faithfully.
+export interface SignalRecord {
+  id: string;
+  userId: string;
+  feedbackReportId: string;
+  niche: string;
+  channel: Channel;
+  contentType: ContentType;
+  tone: Tone;
+  audienceSizeSnapshot: number;
+  views: number | null;
+  replyCount: number | null;
+  signupCount: number | null;
+  sentiment: Sentiment | null;
+  postedAt: string | null;
+  followerCountSnapshot: number | null;
+  hasMedia: boolean | null;
+  hasExternalLink: boolean | null;
+  postFormat: PostFormat | null;
+  isPremiumAccount: boolean | null;
+  confidenceLow: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// reportBack's response — the created FeedbackReport + its SignalRecord. NO
+// Story.status field (same gap draftStory/stagePiece have): call
+// getStory(storyId) afterward for the server-authoritative REPORTED status.
+export interface ReportResult {
+  id: string;
+  sendId: string;
+  rawFeedback: string;
+  createdAt: string;
+  updatedAt: string;
+  signalRecord: SignalRecord;
+}
+
 // ── Request shapes ───────────────────────────────────────────────────────
 export interface CaptureStoryRequest {
   rawCapture: string;
@@ -111,6 +171,11 @@ export interface CaptureStoryRequest {
 export interface StageSendRequest {
   contentPieceId: string;
   audienceId: string;
+}
+
+export interface CreateReportRequest {
+  sendId: string;
+  rawFeedback: string;
 }
 
 // ── Error handling ───────────────────────────────────────────────────────
@@ -197,4 +262,18 @@ export function listStories(page = 1, limit = 20): Promise<PaginatedStories> {
 
 export function stagePiece(body: StageSendRequest): Promise<Send> {
   return apiRequest<Send>("/sends", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function listSends(page = 1, limit = 20): Promise<PaginatedSends> {
+  return apiRequest<PaginatedSends>(`/sends?page=${page}&limit=${limit}`);
+}
+
+// Enriches a bare Send (from listSends) with its ContentPiece + Story —
+// GET /sends doesn't include either, only GET /sends/:id does.
+export function getSend(sendId: string): Promise<SendWithContentPiece> {
+  return apiRequest<SendWithContentPiece>(`/sends/${sendId}`);
+}
+
+export function reportBack(body: CreateReportRequest): Promise<ReportResult> {
+  return apiRequest<ReportResult>("/reports", { method: "POST", body: JSON.stringify(body) });
 }

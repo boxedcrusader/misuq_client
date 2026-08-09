@@ -64,6 +64,13 @@ Section components are 1:1 with the design handoff's "Screens / Views" list (nav
 - [ ] CTAs ("Draft my first update", "Start free", pricing "Choose *" buttons) are visual-only — no click behavior wired up yet. Design handoff explicitly specs this page as static/no-interaction, so this is expected, not a bug. Will need wiring once there's an auth/signup flow to point at (backend side, out of scope here).
 - [ ] Not yet tested on a real device via Expo Go — only verified through `expo start --web`. New app icons/splash in particular should get a real-device or EAS-build check since only the raster PNGs were verified by eye, not an actual native install.
 
+## Backend integration screens (`client/web` only — not built on mobile)
+
+Separate from the static landing page above: real screens wired to `../service`'s live NestJS API, one per V1 loop step (README §2). Each follows the same discipline — typed client in `src/lib/api.ts` mirrors the real backend DTOs/response shapes verbatim (verified live, not assumed), one screen per slice, status is always read back from the server (`getStory`) rather than computed client-side, real guard errors (409/400) surfaced as specific messages instead of generic failures. Dev auth stand-in: `x-user-id` header, seeded id hardcoded in `api.ts` (`getDevUserId`); seeded audiences in `DEV_AUDIENCES`.
+
+- [x] `/capture` (`CaptureFlow.tsx`) + `/send` (`SendFlow.tsx`) — capture → draft, and stage a drafted piece to a seeded audience. See commit `d63f7ec` for full detail.
+- [x] `/report-back` (`ReportBackFlow.tsx`, 2026-08-09) — STAGED → REPORTED. Sources reportable Sends via `listSends` (`GET /sends`, bare rows) enriched per-row with `getSend` (`GET /sends/:id`, includes `contentPiece.story`) — there is no list endpoint that returns the enriched shape directly, so the picker does the join client-side. One freeform `<textarea>` → `reportBack` (`POST /reports`); response has no `Story.status` (same gap as `draftStory`/`stagePiece`), so `getStory` is called afterward for the authoritative status. Deliberately does NOT render the created `SignalRecord` (views/replies/sentiment/etc — stub-extractor output) since judging extraction quality isn't this screen's job. Niche-missing 400 and duplicate-report 409 (`ConflictException`, "already been reported on") both surfaced as specific messages via `describeReportError`, reusing `ErrorBanner` (now takes an optional `message` override prop so callers can pass a transformed string instead of `error.message` verbatim). Verified live: full round-trip (STAGED → submit → REPORTED) and the duplicate-guard 409 both exercised in-browser against the running backend, no console errors.
+
 ## Running
 
 ```bash
