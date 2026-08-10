@@ -1,5 +1,5 @@
-// Typed client for the misuq_service backend — capture/draft/send slices
-// (report/graduate are a later seam, not built here).
+// Typed client for the misuq_service backend — covers the full V1 loop
+// (capture/draft, send, report-back, graduate).
 //
 // Types below MIRROR the real backend contract verbatim, not an assumed
 // shape:
@@ -15,6 +15,9 @@
 //   - SendWithContentPiece     <- SendController's GET /sends/:id (findOne, which
 //                                 `include: { contentPiece: { include: { story: true } } }`s)
 //   - ReportResult             <- ReportBackController's POST /reports response
+//   - graduateStory's response <- GraduateController's POST /stories/:id/graduate
+//                                 (returns the updated Story itself, typed as Story — no
+//                                 separate interface needed, no getStory follow-up required)
 // If a field name or shape here ever differs from the real DTO/model, that's
 // a bug in THIS file to fix, not something to paper over client-side.
 
@@ -276,4 +279,11 @@ export function getSend(sendId: string): Promise<SendWithContentPiece> {
 
 export function reportBack(body: CreateReportRequest): Promise<ReportResult> {
   return apiRequest<ReportResult>("/reports", { method: "POST", body: JSON.stringify(body) });
+}
+
+// No request body — returns the updated Story itself (status GRADUATED,
+// graduatedAt stamped), so this IS the server-authoritative read; no
+// getStory follow-up needed, unlike stagePiece/reportBack.
+export function graduateStory(storyId: string): Promise<Story> {
+  return apiRequest<Story>(`/stories/${storyId}/graduate`, { method: "POST" });
 }
