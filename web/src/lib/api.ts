@@ -29,7 +29,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 // at). ONE config point so swapping to real auth later only touches this
 // function, never call sites.
 function getDevUserId(): string {
-  return process.env.NEXT_PUBLIC_DEV_USER_ID ?? "cmskxkz5a0000pnnusux6ftsa";
+  return process.env.NEXT_PUBLIC_DEV_USER_ID ?? "cmsmw9qg20000pn4egvvx5j6n";
 }
 
 // No listAudiences endpoint exists (no audience-creation module either —
@@ -39,8 +39,8 @@ function getDevUserId(): string {
 // one config point, same treatment as the dev user id: swap for a real
 // listAudiences() call once that endpoint exists, no call-site changes.
 export const DEV_AUDIENCES: { id: string; name: string; type: AudienceType; size: number }[] = [
-  { id: "cmsl1uu0n0002pnsqxdzr7h8m", name: "Beta list", type: "EMAIL_LIST", size: 42 },
-  { id: "cmsl1uu3o0004pnsqo80hsrkf", name: "Discord", type: "DISCORD", size: 18 },
+  { id: "cmst78r9k0002pndsr04njxfg", name: "Beta list", type: "EMAIL_LIST", size: 42 },
+  { id: "cmst78r9u0004pndsoqzg37hr", name: "Discord", type: "DISCORD", size: 18 },
 ];
 
 // ── Enums (prisma/schema.prisma) ────────────────────────────────────────

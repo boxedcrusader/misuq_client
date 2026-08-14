@@ -103,11 +103,21 @@ body {
   color: var(--color-on-indigo);
 }
 
-a {
-  color: var(--color-indigo);
-  text-decoration: none;
-}
+/* @layer base (not a bare rule): Tailwind v4's own utilities live inside its
+   `theme, base, components, utilities` layers, and per the CSS
+   cascade-layers spec, UNLAYERED rules always beat layered ones regardless
+   of specificity. A bare `a { color: ... }` here would silently win over
+   any Tailwind color utility (text-on-indigo, text-muted-2, ...) applied to
+   an <a>/<Link> — not just override the default, but make that utility
+   class inert on anchors app-wide. Layering this fixes it for every current
+   and future anchor, not just the one that happened to expose it. */
+@layer base {
+  a {
+    color: var(--color-indigo);
+    text-decoration: none;
+  }
 
-a:hover {
-  color: var(--color-indigo-hover);
+  a:hover {
+    color: var(--color-indigo-hover);
+  }
 }
