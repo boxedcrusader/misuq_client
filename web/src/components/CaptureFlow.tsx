@@ -6,6 +6,7 @@ import {
   captureStory,
   draftStory,
   getStory,
+  updateContentPiece,
   type ContentType,
   type Story,
   type StoryWithContentPieces,
@@ -41,6 +42,17 @@ const TYPE_CHIPS: { label: string; value: ContentType }[] = [
   { label: "Lesson", value: "LESSON_LEARNED" },
 ];
 
+// Same "these are the state machine talking, display them" default as
+// ReportBackFlow's describeReportError — the only case worth a friendlier
+// rewrite is the specific already-sent guard, since "ContentPiece <id> is
+// SENT" is meaningless to a founder.
+function describeEditError(error: ApiError): string {
+  if (error.statusCode === 409 && /has already been sent and can no longer be edited/.test(error.message)) {
+    return "This draft has already been sent, so edits can no longer be saved.";
+  }
+  return error.message;
+}
+
 export function CaptureFlow() {
   const [rawCapture, setRawCapture] = useState("");
   const [title, setTitle] = useState("");
@@ -53,6 +65,14 @@ export function CaptureFlow() {
   const [isDrafting, setIsDrafting] = useState(false);
   const [captureError, setCaptureError] = useState<ApiError | null>(null);
   const [draftError, setDraftError] = useState<ApiError | null>(null);
+
+  // Local textarea value, seeded from the server's body whenever a NEW piece
+  // loads (handleDraft below) — not re-synced on every render, so it doesn't
+  // clobber in-progress typing after a save response comes back with the
+  // same text the founder just submitted.
+  const [bodyDraft, setBodyDraft] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<ApiError | null>(null);
 
   const canCapture = rawCapture.trim().length > 0 && !isCapturing;
 
@@ -84,10 +104,30 @@ export function CaptureFlow() {
       await draftStory(story.id);
       const refreshed = await getStory(story.id);
       setDrafted(refreshed);
+      setBodyDraft(refreshed.contentPieces[0]?.body ?? "");
     } catch (err) {
       setDraftError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
     } finally {
       setIsDrafting(false);
+    }
+  }
+
+  async function handleSaveEdit() {
+    const piece = drafted?.contentPieces[0];
+    if (!piece || bodyDraft.trim().length === 0) return;
+    setIsSavingEdit(true);
+    setEditError(null);
+    try {
+      // Server-authoritative response (updated body + status) replaces the
+      // piece wholesale — never computed client-side, same discipline as
+      // every other write in this app.
+      const updated = await updateContentPiece(piece.id, { body: bodyDraft.trim() });
+      setDrafted({ ...drafted!, contentPieces: [updated, ...drafted!.contentPieces.slice(1)] });
+      setBodyDraft(updated.body);
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+    } finally {
+      setIsSavingEdit(false);
     }
   }
 
@@ -99,7 +139,12 @@ export function CaptureFlow() {
     setDrafted(null);
     setCaptureError(null);
     setDraftError(null);
+    setBodyDraft("");
+    setEditError(null);
   }
+
+  const piece = drafted?.contentPieces[0] ?? null;
+  const canSaveEdit = piece !== null && bodyDraft.trim().length > 0 && bodyDraft.trim() !== piece.body && !isSavingEdit;
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 py-16 sm:py-20">
@@ -200,26 +245,50 @@ export function CaptureFlow() {
         </div>
       )}
 
-      {drafted && (
+      {drafted && piece && (
         <div className="flex flex-col gap-4 rounded-[18px] border border-border-hairline bg-card p-6">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo">
               Draft for preview
             </span>
-            <span className="text-[12px] text-text-faint">
-              {drafted.contentPieces[0]?.channel} · {drafted.contentPieces[0]?.tone}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-text-faint">
+                {piece.channel} · {piece.tone}
+              </span>
+              <StatusBadge status={piece.status} />
+            </div>
           </div>
-          <p className="whitespace-pre-line text-[14px] leading-[1.62] text-text-muted">
-            {drafted.contentPieces[0]?.body}
+
+          <p className="text-[13px] leading-[1.5] text-text-muted-2">
+            First draft — make it yours.
           </p>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="self-start text-[13px] font-medium text-text-muted-2"
-          >
-            Capture another update
-          </button>
+
+          <textarea
+            value={bodyDraft}
+            onChange={(e) => setBodyDraft(e.target.value)}
+            rows={8}
+            className="w-full resize-none rounded-[14px] border border-border-input bg-transparent p-3.5 text-[14px] leading-[1.62] text-deep-ink outline-none placeholder:text-text-faint focus:border-indigo"
+          />
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="text-[13px] font-medium text-text-muted-2"
+            >
+              Capture another update
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveEdit}
+              disabled={!canSaveEdit}
+              className="rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold text-on-indigo shadow-[0_10px_22px_-8px_rgba(91,79,233,0.55)] disabled:cursor-not-allowed disabled:bg-context-fill disabled:text-text-faint disabled:shadow-none"
+            >
+              {isSavingEdit ? "Saving…" : "Save edits"}
+            </button>
+          </div>
+
+          {editError && <ErrorBanner error={editError} message={describeEditError(editError)} />}
         </div>
       )}
     </div>

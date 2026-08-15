@@ -18,6 +18,10 @@
 //   - graduateStory's response <- GraduateController's POST /stories/:id/graduate
 //                                 (returns the updated Story itself, typed as Story — no
 //                                 separate interface needed, no getStory follow-up required)
+//   - UpdateContentPieceRequest <- service/src/modules/content-pieces/dto/update-content-piece.dto.ts
+//   - updateContentPiece's response <- ContentPiecesController's PATCH /content-pieces/:id
+//                                 (returns the updated ContentPiece itself — server-authoritative,
+//                                 no follow-up read needed, same pattern as graduateStory)
 // If a field name or shape here ever differs from the real DTO/model, that's
 // a bug in THIS file to fix, not something to paper over client-side.
 
@@ -39,8 +43,8 @@ function getDevUserId(): string {
 // one config point, same treatment as the dev user id: swap for a real
 // listAudiences() call once that endpoint exists, no call-site changes.
 export const DEV_AUDIENCES: { id: string; name: string; type: AudienceType; size: number }[] = [
-  { id: "cmst78r9k0002pndsr04njxfg", name: "Beta list", type: "EMAIL_LIST", size: 42 },
-  { id: "cmst78r9u0004pndsoqzg37hr", name: "Discord", type: "DISCORD", size: 18 },
+  { id: "cmstmnndu0002pnfgatal52mg", name: "Beta list", type: "EMAIL_LIST", size: 42 },
+  { id: "cmstmnne40004pnfg73yvq0ch", name: "Discord", type: "DISCORD", size: 18 },
 ];
 
 // ── Enums (prisma/schema.prisma) ────────────────────────────────────────
@@ -82,6 +86,10 @@ export interface ContentPiece {
   channel: Channel;
   stage: Stage;
   tone: Tone;
+  // Immutable snapshot of the drafting provider's raw output, set once at
+  // draft generation. `body` is the mutable current/shipped text — send-as-is
+  // is derivable client-side as `body === generatedBody`, no separate flag.
+  generatedBody: string;
   body: string;
   status: ContentPieceStatus;
   createdAt: string;
@@ -176,6 +184,10 @@ export interface StageSendRequest {
   audienceId: string;
 }
 
+export interface UpdateContentPieceRequest {
+  body: string;
+}
+
 export interface CreateReportRequest {
   sendId: string;
   rawFeedback: string;
@@ -261,6 +273,18 @@ export function getStory(storyId: string): Promise<StoryWithContentPieces> {
 // client-side (e.g. to status === "DRAFTED" for the Send screen's picker).
 export function listStories(page = 1, limit = 20): Promise<PaginatedStories> {
   return apiRequest<PaginatedStories>(`/stories?page=${page}&limit=${limit}`);
+}
+
+// PATCH /content-pieces/:id — returns the updated piece (server-authoritative
+// body/status), same "trust the response, don't compute client-side"
+// discipline as every other write in this file. 409 when the piece has
+// already been SENT (send froze it, too late to edit) — surface via
+// ErrorBanner same as the other guard errors in this file.
+export function updateContentPiece(contentPieceId: string, body: UpdateContentPieceRequest): Promise<ContentPiece> {
+  return apiRequest<ContentPiece>(`/content-pieces/${contentPieceId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 }
 
 export function stagePiece(body: StageSendRequest): Promise<Send> {
