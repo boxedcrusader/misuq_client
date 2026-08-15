@@ -1,6 +1,6 @@
 # Misuq — Frontend (client/)
 
-Scope note: this file covers `client/` only (web + mobile). The backend lives in `../service` and is owned separately — do not edit it from here. The backend's own project brief is `../README.md` / `../CLAUDE.md`.
+Scope note: this file covers `client/` only (web + mobile). The backend lives in `../service` and is owned separately — do not edit it from here. The backend's own project brief is `../service/CLAUDE.md`.
 
 **Maintenance rule: update this file after every task completed in `client/`** — add what changed, don't just leave it stale. Keep entries short; link to files instead of pasting code.
 
