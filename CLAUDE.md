@@ -87,6 +87,8 @@ Separate from the static landing page above: real screens wired to `../service`'
 
 - [x] `ReportResult.signalRecord` is now `SignalRecord | null` (2026-11-03), because the backend's real Gemini extraction can fail. The founder's report and the REPORTED status are saved regardless, and the backend retries extraction separately (`POST /reports/:id/extract`, not called from the client). `ReportBackFlow` never rendered the signal, so no UI changed; **don't show a null signal as an error**, since the founder's report succeeded. `DEV_AUDIENCES` re-pointed at the current seed ids again (the backend test run truncated the dev DB).
 
+- [x] `SignalRecord.tone` is now `Tone | null` in `api.ts` (2026-11-03), mirroring the backend: null = the post's angle was never classified; the backend never pools OTHER. No screen renders it. `DEV_AUDIENCES` re-pointed at the current seed ids again.
+
 ## Running
 
 ```bash
