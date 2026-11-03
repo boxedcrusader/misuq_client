@@ -40,8 +40,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 // truncated (see client/CLAUDE.md). Swap for a real listAudiences() call
 // once that endpoint exists, no call-site changes.
 export const DEV_AUDIENCES: { id: string; name: string; type: AudienceType; size: number }[] = [
-  { id: "cmw14qtry0002pnopznk4pf5f", name: "Beta list", type: "EMAIL_LIST", size: 42 },
-  { id: "cmw14qtsn0004pnopg3133n1g", name: "Discord", type: "DISCORD", size: 18 },
+  { id: "cmw1514ho0002pngf4i68906a", name: "Beta list", type: "EMAIL_LIST", size: 42 },
+  { id: "cmw1514hy0004pngfok2ia6z8", name: "Discord", type: "DISCORD", size: 18 },
 ];
 
 // ── Enums (prisma/schema.prisma) ────────────────────────────────────────

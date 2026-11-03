@@ -89,6 +89,8 @@ Separate from the static landing page above: real screens wired to `../service`'
 
 - [x] `SignalRecord.tone` is now `Tone | null` in `api.ts` (2026-11-03), mirroring the backend: null = the post's angle was never classified; the backend never pools OTHER. No screen renders it. `DEV_AUDIENCES` re-pointed at the current seed ids again.
 
+- `DEV_AUDIENCES` re-pointed at the current seed ids again (2026-11-03, after another backend test run truncated the dev DB). This keeps recurring until `GET /audiences` replaces the hardcoded list.
+
 ## Running
 
 ```bash
