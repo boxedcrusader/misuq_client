@@ -5,7 +5,6 @@ import { Hero } from "../components/Hero";
 import { Problem } from "../components/Problem";
 import { HowItWorks } from "../components/HowItWorks";
 import { ReportBack } from "../components/ReportBack";
-import { Pricing } from "../components/Pricing";
 import { ClosingCta } from "../components/ClosingCta";
 import { Footer } from "../components/Footer";
 import { Reveal } from "../components/Reveal";
@@ -44,9 +43,6 @@ export function LandingScreen() {
         </Reveal>
         <Reveal scrollY={scrollY} viewportHeight={viewportHeight}>
           <ReportBack />
-        </Reveal>
-        <Reveal scrollY={scrollY} viewportHeight={viewportHeight}>
-          <Pricing />
         </Reveal>
         <Reveal scrollY={scrollY} viewportHeight={viewportHeight}>
           <ClosingCta />

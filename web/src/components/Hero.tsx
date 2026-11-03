@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Hero() {
   return (
     <header className="mx-auto grid max-w-[1080px] grid-cols-1 items-center gap-12 px-6 py-16 sm:px-10 sm:py-20 md:grid-cols-[1.05fr_0.95fr] md:gap-16 md:py-24">
@@ -17,12 +19,18 @@ export function Hero() {
           its own.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3.5">
-          <button className="cursor-pointer rounded-xl bg-indigo px-6.5 py-3.5 text-base font-medium text-on-indigo transition-colors hover:bg-indigo-hover">
+          <Link
+            href="/login?mode=signup"
+            className="rounded-xl bg-indigo px-6.5 py-3.5 text-base font-medium text-on-indigo transition-colors hover:bg-indigo-hover"
+          >
             Draft my first update
-          </button>
-          <button className="cursor-pointer rounded-xl border border-border-input bg-transparent px-6.5 py-3.5 text-base font-medium text-deep-ink transition-colors hover:bg-card">
+          </Link>
+          <a
+            href="#how"
+            className="rounded-xl border border-border-input bg-transparent px-6.5 py-3.5 text-base font-medium text-deep-ink transition-colors hover:bg-card"
+          >
             See how it works
-          </button>
+          </a>
         </div>
         <div className="mt-1 text-[13.5px] text-text-muted-3">
           No card required · No auto-posting, ever · Founder-paced

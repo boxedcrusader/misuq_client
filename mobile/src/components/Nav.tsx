@@ -18,7 +18,7 @@ export function Nav() {
       <View style={styles.actions}>
         <ThemeToggle />
         <Pressable style={styles.cta}>
-          <Text style={styles.ctaText}>Start free</Text>
+          <Text style={styles.ctaText}>Get started</Text>
         </Pressable>
       </View>
     </View>

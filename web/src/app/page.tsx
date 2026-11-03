@@ -3,7 +3,6 @@ import { Hero } from "@/components/Hero";
 import { Problem } from "@/components/Problem";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ReportBack } from "@/components/ReportBack";
-import { Pricing } from "@/components/Pricing";
 import { ClosingCta } from "@/components/ClosingCta";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
@@ -23,9 +22,6 @@ export default function Home() {
       </Reveal>
       <Reveal>
         <ReportBack />
-      </Reveal>
-      <Reveal>
-        <Pricing />
       </Reveal>
       <Reveal>
         <ClosingCta />

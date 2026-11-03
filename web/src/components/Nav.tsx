@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -18,17 +19,20 @@ export function Nav() {
         >
           How it works
         </a>
-        <a
-          href="#pricing"
+        <Link
+          href="/login"
           className="hidden text-[14.5px] font-normal text-text-muted sm:inline"
           style={{ fontWeight: 450 }}
         >
-          Pricing
-        </a>
+          Log in
+        </Link>
         <ThemeToggle />
-        <button className="rounded-[10px] bg-indigo px-4.5 py-2.5 text-[14.5px] font-medium text-on-indigo transition-colors hover:bg-indigo-hover cursor-pointer">
-          Start free
-        </button>
+        <Link
+          href="/login?mode=signup"
+          className="rounded-[10px] bg-indigo px-4.5 py-2.5 text-[14.5px] font-medium text-on-indigo transition-colors hover:bg-indigo-hover"
+        >
+          Get started
+        </Link>
       </div>
     </nav>
   );
