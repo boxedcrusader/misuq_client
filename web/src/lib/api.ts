@@ -22,29 +22,26 @@
 //   - updateContentPiece's response <- ContentPiecesController's PATCH /content-pieces/:id
 //                                 (returns the updated ContentPiece itself — server-authoritative,
 //                                 no follow-up read needed, same pattern as graduateStory)
+//   - RegisterRequest / LoginRequest <- service/src/modules/auth/dto/{register,login}.dto.ts
+//   - AuthUser / AuthResult    <- AuthService's PUBLIC_USER_SELECT + register/login response
+//                                 (service/src/modules/auth/auth.service.ts)
 // If a field name or shape here ever differs from the real DTO/model, that's
 // a bug in THIS file to fix, not something to paper over client-side.
 
+import { clearSession, getSession, setSession, updateTokens } from "@/lib/session";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
-// Auth stand-in (service's current-user.decorator.ts reads x-user-id off
-// every request; there is no real auth or user-creation endpoint yet — see
-// service/prisma/scripts/seed-dev-user.js for the seeded row this points
-// at). ONE config point so swapping to real auth later only touches this
-// function, never call sites.
-function getDevUserId(): string {
-  return process.env.NEXT_PUBLIC_DEV_USER_ID ?? "cmsmw9qg20000pn4egvvx5j6n";
-}
-
-// No listAudiences endpoint exists (no audience-creation module either —
-// both deferred, same as real auth). These are the 2 Audiences
-// prisma/scripts/seed-dev-user.js upserts for the dev user above — the ONLY
-// audiences that exist to stage anything to right now. Fixed here as the
-// one config point, same treatment as the dev user id: swap for a real
-// listAudiences() call once that endpoint exists, no call-site changes.
+// No listAudiences endpoint exists (no audience-creation module either).
+// These are the 2 Audiences prisma/scripts/seed-dev-user.js upserts for the
+// seeded dev founder (dev-founder@misuq.local) — audiences are user-scoped
+// on the backend, so they ONLY work while logged in as that user; any other
+// account gets a 404 staging to them. Ids go stale whenever the dev DB is
+// truncated (see client/CLAUDE.md). Swap for a real listAudiences() call
+// once that endpoint exists, no call-site changes.
 export const DEV_AUDIENCES: { id: string; name: string; type: AudienceType; size: number }[] = [
-  { id: "cmstmnndu0002pnfgatal52mg", name: "Beta list", type: "EMAIL_LIST", size: 42 },
-  { id: "cmstmnne40004pnfg73yvq0ch", name: "Discord", type: "DISCORD", size: 18 },
+  { id: "cmw139i8v0002pnodoo30dskk", name: "Beta list", type: "EMAIL_LIST", size: 42 },
+  { id: "cmw139i950004pnodtkdud6hi", name: "Discord", type: "DISCORD", size: 18 },
 ];
 
 // ── Enums (prisma/schema.prisma) ────────────────────────────────────────
@@ -66,6 +63,7 @@ export type ContentPieceStatus = "DRAFTED" | "EDITED" | "SENT";
 export type AudienceType = "EMAIL_LIST" | "DISCORD" | "BETA_USERS" | "PEERS";
 export type Sentiment = "POSITIVE" | "NEUTRAL" | "MIXED" | "NEGATIVE";
 export type PostFormat = "SINGLE" | "THREAD" | "QUOTE" | "REPLY" | "LONGFORM";
+export type Plan = "DRAFT_ONLY" | "STARTER" | "GROWTH" | "SCALE";
 
 // ── Response shapes (verified live against the running backend) ────────
 export interface Story {
@@ -193,6 +191,37 @@ export interface CreateReportRequest {
   rawFeedback: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string; // 8–128 chars (RegisterDto)
+  name?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+// ── Auth response shapes ────────────────────────────────────────────────
+// Never includes passwordHash / hashedRefreshToken — the backend selects
+// these fields explicitly (PUBLIC_USER_SELECT).
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string | null;
+  plan: Plan;
+  niche: string | null;
+  aggregateLearningConsent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthResult {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}
+
 // ── Error handling ───────────────────────────────────────────────────────
 // NestJS's default HttpExceptionFilter shape (no custom filter exists in
 // the backend — verified in service/src/common/) — class-validator's
@@ -217,28 +246,100 @@ export class ApiError extends Error {
   }
 }
 
+function networkError(): ApiError {
+  // Network failure / backend unreachable / CORS rejection — fetch throws
+  // a generic TypeError with no useful body, so surface a usable message
+  // instead of letting that opaque error propagate.
+  return new ApiError(0, {
+    statusCode: 0,
+    error: "Network Error",
+    message: "Could not reach the backend — is it running and is CORS configured for this origin?",
+  });
+}
+
+function sendRequest(path: string, init: RequestInit | undefined, accessToken: string | undefined): Promise<Response> {
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...init?.headers,
+    },
+  });
+}
+
+// ── Token refresh ───────────────────────────────────────────────────────
+// The backend ROTATES refresh tokens: each one works exactly once. So
+// concurrent 401s (a screen firing several requests at once) must share ONE
+// refresh call — if each fired its own, the first would spend the token and
+// the rest would be rejected, logging the founder out for no reason.
+type RefreshOutcome = "refreshed" | "rejected" | "unavailable";
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
+
+function refreshSession(): Promise<RefreshOutcome> {
+  refreshInFlight ??= doRefresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function doRefresh(): Promise<RefreshOutcome> {
+  const current = getSession();
+  if (!current) return "rejected";
+
+  let response: Response;
+  try {
+    response = await sendRequest(
+      "/auth/refresh",
+      { method: "POST", body: JSON.stringify({ refreshToken: current.refreshToken }) },
+      undefined,
+    );
+  } catch {
+    // Backend unreachable is not a verdict on the session — keep it.
+    return "unavailable";
+  }
+
+  if (response.ok) {
+    updateTokens((await response.json()) as { accessToken: string; refreshToken: string });
+    return "refreshed";
+  }
+
+  // Another TAB may have rotated the token while this request was in
+  // flight (tabs share localStorage but not refreshInFlight). If storage
+  // now holds a different refresh token, that tab won — use its tokens.
+  const latest = getSession();
+  if (latest && latest.refreshToken !== current.refreshToken) return "refreshed";
+
+  // Any 4xx is a definitive "this token is no good" (401 spent/revoked/
+  // expired; 400 malformed — RefreshDto's @IsJWT) and ends the session.
+  // Only a 5xx might be transient, so that one keeps it.
+  if (response.status >= 400 && response.status < 500) {
+    clearSession(); // RequireAuth sees this and redirects to /login
+    return "rejected";
+  }
+  return "unavailable";
+}
+
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-id": getDevUserId(),
-        ...init?.headers,
-      },
-    });
+    response = await sendRequest(path, init, getSession()?.accessToken);
+    // An expired access token is routine (15 min TTL): refresh once and
+    // replay. Never loops — the replay's own 401 falls through as an error.
+    if (response.status === 401 && getSession()) {
+      const outcome = await refreshSession();
+      if (outcome === "refreshed") {
+        response = await sendRequest(path, init, getSession()?.accessToken);
+      }
+    }
   } catch {
-    // Network failure / backend unreachable / CORS rejection — fetch throws
-    // a generic TypeError with no useful body, so surface a usable message
-    // instead of letting that opaque error propagate.
-    throw new ApiError(0, {
-      statusCode: 0,
-      error: "Network Error",
-      message: "Could not reach the backend — is it running and is CORS configured for this origin?",
-    });
+    throw networkError();
   }
 
+  return readResponse<T>(response);
+}
+
+async function readResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let body: ApiErrorBody;
     try {
@@ -249,7 +350,56 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(response.status, body);
   }
 
+  // 204 No Content (e.g. POST /auth/logout) has no body to parse.
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────
+// register/login go through a plain fetch, not apiRequest: they're public
+// endpoints, and a 401 here means "wrong password", not "refresh and retry".
+async function authenticate(path: "/auth/register" | "/auth/login", body: RegisterRequest | LoginRequest): Promise<AuthResult> {
+  let response: Response;
+  try {
+    response = await sendRequest(path, { method: "POST", body: JSON.stringify(body) }, undefined);
+  } catch {
+    throw networkError();
+  }
+  const result = await readResponse<AuthResult>(response);
+  setSession({
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    user: { id: result.user.id, email: result.user.email, name: result.user.name },
+  });
+  return result;
+}
+
+// 409 when the email already has an account; 400 for validation failures
+// (bad email, password under 8 chars).
+export function register(body: RegisterRequest): Promise<AuthResult> {
+  return authenticate("/auth/register", body);
+}
+
+// 401 "Invalid email or password" for both unknown email and wrong password.
+export function login(body: LoginRequest): Promise<AuthResult> {
+  return authenticate("/auth/login", body);
+}
+
+// Revokes the refresh token server-side, then forgets the local session.
+// The local clear happens even if the server call fails — a founder who
+// clicks "Log out" must end up logged out on this device regardless.
+export async function logout(): Promise<void> {
+  try {
+    await apiRequest<void>("/auth/logout", { method: "POST" });
+  } catch {
+    // Best-effort revocation; the refresh token still expires on its own.
+  } finally {
+    clearSession();
+  }
+}
+
+export function getMe(): Promise<AuthUser> {
+  return apiRequest<AuthUser>("/auth/me");
 }
 
 export function captureStory(body: CaptureStoryRequest): Promise<Story> {
