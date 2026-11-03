@@ -85,6 +85,8 @@ Separate from the static landing page above: real screens wired to `../service`'
   - `DEV_AUDIENCES` re-pointed at the current seed ids. Audiences are user-scoped on the backend, so these only work logged in as `dev-founder@misuq.local` / `misuq-dev-password`. A newly registered account can capture/draft but can't send (no audiences) or report back (no niche) until onboarding exists.
   - Verified: `tsc`, `next build` (all routes static, `/login` included), eslint clean except the pre-existing `ThemeToggle.tsx` set-state-in-effect error. **Not verified in a real browser:** the Chrome extension was disconnected that session. Instead the real `api.ts`/`session.ts` were transpiled and run in Node against the live backend: 19 checks covering login, transparent refresh, one shared refresh for 4 concurrent 401s, the session clearing on a malformed or superseded refresh token, logout revocation, register + 409, and `safeNextPath`. A full capture → draft → stage → report → graduate walk ran through the same client. Still worth one in-browser pass: redirect-to-login, `?next=` round-trip, the logout bar, and dark mode on `/login`.
 
+- [x] `ReportResult.signalRecord` is now `SignalRecord | null` (2026-11-03), because the backend's real Gemini extraction can fail. The founder's report and the REPORTED status are saved regardless, and the backend retries extraction separately (`POST /reports/:id/extract`, not called from the client). `ReportBackFlow` never rendered the signal, so no UI changed; **don't show a null signal as an error**, since the founder's report succeeded. `DEV_AUDIENCES` re-pointed at the current seed ids again (the backend test run truncated the dev DB).
+
 ## Running
 
 ```bash

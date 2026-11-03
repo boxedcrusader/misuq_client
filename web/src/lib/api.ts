@@ -40,8 +40,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 // truncated (see client/CLAUDE.md). Swap for a real listAudiences() call
 // once that endpoint exists, no call-site changes.
 export const DEV_AUDIENCES: { id: string; name: string; type: AudienceType; size: number }[] = [
-  { id: "cmw139i8v0002pnodoo30dskk", name: "Beta list", type: "EMAIL_LIST", size: 42 },
-  { id: "cmw139i950004pnodtkdud6hi", name: "Discord", type: "DISCORD", size: 18 },
+  { id: "cmw1462n60002pnbnte8jqicj", name: "Beta list", type: "EMAIL_LIST", size: 42 },
+  { id: "cmw1462od0004pnbnsaj6y5tr", name: "Discord", type: "DISCORD", size: 18 },
 ];
 
 // ── Enums (prisma/schema.prisma) ────────────────────────────────────────
@@ -161,13 +161,17 @@ export interface SignalRecord {
 // reportBack's response — the created FeedbackReport + its SignalRecord. NO
 // Story.status field (same gap draftStory/stagePiece have): call
 // getStory(storyId) afterward for the server-authoritative REPORTED status.
+// signalRecord is null when Gemini extraction failed: the founder's report
+// and the REPORTED status are saved regardless, and the backend can retry
+// extraction later (POST /reports/:id/extract) — so null is NOT an error
+// to show the founder.
 export interface ReportResult {
   id: string;
   sendId: string;
   rawFeedback: string;
   createdAt: string;
   updatedAt: string;
-  signalRecord: SignalRecord;
+  signalRecord: SignalRecord | null;
 }
 
 // ── Request shapes ───────────────────────────────────────────────────────
