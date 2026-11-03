@@ -1,2 +1,6 @@
 allowBuilds:
-  unrs-resolver: set this to true or false
+  # Denied: an optional native-resolver postinstall pulled in by
+  # eslint-config-next. Linting works without it (prebuilt bindings), and an
+  # undecided entry makes `pnpm install --frozen-lockfile` exit 1
+  # (ERR_PNPM_IGNORED_BUILDS), which fails CI builds such as Cloudflare Pages.
+  unrs-resolver: false
