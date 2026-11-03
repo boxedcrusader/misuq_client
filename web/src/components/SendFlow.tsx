@@ -3,15 +3,18 @@
 import { useEffect, useState } from "react";
 import {
   ApiError,
-  DEV_AUDIENCES,
   getStory,
+  listAudiences,
   listStories,
   stagePiece,
+  type Audience,
   type ContentPiece,
   type Send,
   type Story,
   type StoryWithContentPieces,
 } from "@/lib/api";
+import { AUDIENCE_TYPE_LABELS } from "@/lib/labels";
+import { AudienceForm } from "@/components/AudienceForm";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 
@@ -20,9 +23,11 @@ import { StatusBadge } from "@/components/StatusBadge";
 // is the final action + confirmation state of Draft Review: "Send to
 // preview audience" CTA -> "On its way." confirmation). That spec assumes
 // one implicit preview audience; this backend supports several real
-// Audience rows, so the picker below (2 seeded audiences, see
-// prisma/scripts/seed-dev-user.js) is a deliberate extension beyond the
-// spec's literal states, not a spec screen being reproduced as-is.
+// Audience rows, so the picker below (the founder's own, from
+// listAudiences()) is a deliberate extension beyond the spec's literal
+// states, not a spec screen being reproduced as-is. A founder with no
+// audience (draft-only — they skipped that onboarding step) gets an inline
+// AudienceForm instead of a dead end.
 //
 // Scope: DRAFTED -> STAGED only, via a real drafted piece and a real seeded
 // Audience. No report/graduate UI. Status shown is always read from a
@@ -59,6 +64,8 @@ export function SendFlow() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState<ApiError | null>(null);
 
+  const [audiences, setAudiences] = useState<Audience[] | null>(null);
+  const [audiencesError, setAudiencesError] = useState<ApiError | null>(null);
   const [selectedAudienceId, setSelectedAudienceId] = useState<string | null>(null);
   const [stagedByAudienceId, setStagedByAudienceId] = useState<Record<string, Send>>({});
   const [storyStatus, setStoryStatus] = useState<string | null>(null);
@@ -74,6 +81,22 @@ export function SendFlow() {
       setListError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
     }
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    listAudiences()
+      .then((page) => {
+        if (!cancelled) setAudiences(page.data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setAudiencesError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,7 +163,13 @@ export function SendFlow() {
   }
 
   const piece = selectedDetail ? latestPiece(selectedDetail.contentPieces) : null;
-  const selectedAudience = DEV_AUDIENCES.find((a) => a.id === selectedAudienceId) ?? null;
+  const selectedAudience = audiences?.find((a) => a.id === selectedAudienceId) ?? null;
+
+  function handleAudienceCreated(audience: Audience) {
+    setAudiences((prev) => [...(prev ?? []), audience]);
+    setStageError(null);
+    setSelectedAudienceId(audience.id);
+  }
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 py-16 sm:py-20">
@@ -209,8 +238,26 @@ export function SendFlow() {
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-text-muted-3">
                 Send to
               </span>
+              {audiencesError && <ErrorBanner error={audiencesError} />}
+              {audiences === null && !audiencesError && (
+                <p className="text-[14px] text-text-muted">Loading your audiences…</p>
+              )}
+              {audiences?.length === 0 && (
+                <div className="flex flex-col gap-3 rounded-[16px] border border-border-hairline p-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-display text-[15px] font-semibold text-deep-ink">
+                      You&apos;re in draft-only mode
+                    </p>
+                    <p className="text-[13px] leading-[1.5] text-text-muted">
+                      Drafts are yours to copy and post anywhere. To test one first, add a small room — a
+                      group chat with three founder friends counts.
+                    </p>
+                  </div>
+                  <AudienceForm onCreated={handleAudienceCreated} />
+                </div>
+              )}
               <div className="flex flex-col gap-2">
-                {DEV_AUDIENCES.map((audience) => {
+                {audiences?.map((audience) => {
                   const staged = stagedByAudienceId[audience.id];
                   const active = selectedAudienceId === audience.id;
                   return (
@@ -236,7 +283,7 @@ export function SendFlow() {
                       <span className="flex flex-col">
                         <span className="text-[14px] font-semibold text-deep-ink">{audience.name}</span>
                         <span className="text-[12px] text-text-muted-3">
-                          {audience.type} · {audience.size} readers
+                          {AUDIENCE_TYPE_LABELS[audience.type]} · {audience.size} readers
                         </span>
                       </span>
                       {staged && (
@@ -249,6 +296,7 @@ export function SendFlow() {
                 })}
               </div>
 
+              {audiences !== null && audiences.length > 0 && (
               <button
                 type="button"
                 onClick={handleStage}
@@ -257,6 +305,7 @@ export function SendFlow() {
               >
                 {isStaging ? "Sending…" : "Send to preview audience →"}
               </button>
+              )}
 
               {stageError && selectedAudience && (
                 <div className="rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-[14px] text-red-700">

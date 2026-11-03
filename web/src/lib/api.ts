@@ -25,24 +25,15 @@
 //   - RegisterRequest / LoginRequest <- service/src/modules/auth/dto/{register,login}.dto.ts
 //   - AuthUser / AuthResult    <- AuthService's PUBLIC_USER_SELECT + register/login response
 //                                 (service/src/modules/auth/auth.service.ts)
+//   - UpdateMeRequest          <- service/src/modules/auth/dto/update-me.dto.ts
+//   - Audience / Create/UpdateAudienceRequest <- service/src/modules/audiences/ (model + DTOs)
+//   - VoiceSample              <- service/src/modules/voice/ (GET/PUT /voice-profile)
 // If a field name or shape here ever differs from the real DTO/model, that's
 // a bug in THIS file to fix, not something to paper over client-side.
 
-import { clearSession, getSession, setSession, updateTokens } from "@/lib/session";
+import { clearSession, getSession, setSession, setSessionOnboarded, updateTokens } from "@/lib/session";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
-
-// No listAudiences endpoint exists (no audience-creation module either).
-// These are the 2 Audiences prisma/scripts/seed-dev-user.js upserts for the
-// seeded dev founder (dev-founder@misuq.local) — audiences are user-scoped
-// on the backend, so they ONLY work while logged in as that user; any other
-// account gets a 404 staging to them. Ids go stale whenever the dev DB is
-// truncated (see client/CLAUDE.md). Swap for a real listAudiences() call
-// once that endpoint exists, no call-site changes.
-export const DEV_AUDIENCES: { id: string; name: string; type: AudienceType; size: number }[] = [
-  { id: "cmw1514ho0002pngf4i68906a", name: "Beta list", type: "EMAIL_LIST", size: 42 },
-  { id: "cmw1514hy0004pngfok2ia6z8", name: "Discord", type: "DISCORD", size: 18 },
-];
 
 // ── Enums (prisma/schema.prisma) ────────────────────────────────────────
 export type ContentType = "FEATURE_ANNOUNCEMENT" | "MILESTONE" | "LESSON_LEARNED" | "OTHER";
@@ -64,6 +55,17 @@ export type AudienceType = "EMAIL_LIST" | "DISCORD" | "BETA_USERS" | "PEERS";
 export type Sentiment = "POSITIVE" | "NEUTRAL" | "MIXED" | "NEGATIVE";
 export type PostFormat = "SINGLE" | "THREAD" | "QUOTE" | "REPLY" | "LONGFORM";
 export type Plan = "DRAFT_ONLY" | "STARTER" | "GROWTH" | "SCALE";
+export type Niche =
+  | "DEV_TOOLS"
+  | "AI_TOOLS"
+  | "PRODUCTIVITY"
+  | "NO_CODE"
+  | "MARKETING_TOOLS"
+  | "ANALYTICS"
+  | "DESIGN_TOOLS"
+  | "ECOMMERCE"
+  | "FINTECH"
+  | "OTHER";
 
 // ── Response shapes (verified live against the running backend) ────────
 export interface Story {
@@ -123,8 +125,8 @@ export interface PaginatedSends {
 
 // GET /sends/:id (findOne) enriches the bare Send with its ContentPiece and
 // that piece's Story — everything the report-back picker needs EXCEPT the
-// Audience (not included by this endpoint; resolved via DEV_AUDIENCES
-// locally instead, same as the Send screen).
+// Audience (not included by this endpoint; the screen resolves names from
+// listAudiences() client-side).
 export interface SendWithContentPiece extends Send {
   contentPiece: ContentPiece & { story: Story };
 }
@@ -216,8 +218,11 @@ export interface AuthUser {
   email: string;
   name: string | null;
   plan: Plan;
-  niche: string | null;
+  niche: Niche | null;
   aggregateLearningConsent: boolean;
+  // When onboarding finished; null = not yet. Product screens send the
+  // founder to /onboarding until it's set (RequireAuth).
+  onboardedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -226,6 +231,38 @@ export interface AuthResult {
   accessToken: string;
   refreshToken: string;
   user: AuthUser;
+}
+
+export interface UpdateMeRequest {
+  name?: string; // "" clears it
+  niche?: Niche; // no way to unset — report-back needs one
+}
+
+export interface Audience {
+  id: string;
+  userId: string;
+  name: string;
+  type: AudienceType;
+  size: number; // founder's rough headcount; frozen into each Send at send time
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedAudiences {
+  data: Audience[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface CreateAudienceRequest {
+  name: string; // 1–80 chars
+  type: AudienceType;
+  size: number; // integer, 1–10,000,000
+}
+
+export type UpdateAudienceRequest = Partial<CreateAudienceRequest>;
+
+export interface VoiceSample {
+  styleSample: string | null;
 }
 
 // ── Error handling ───────────────────────────────────────────────────────
@@ -356,9 +393,13 @@ async function readResponse<T>(response: Response): Promise<T> {
     throw new ApiError(response.status, body);
   }
 
-  // 204 No Content (e.g. POST /auth/logout) has no body to parse.
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  // No body to parse: either 204 No Content (POST /auth/logout), or a 200
+  // whose handler returned null — Nest sends that as an EMPTY body, not the
+  // text "null" (found live: GET /voice-profile for a founder with no sample
+  // crashed onboarding with "Unexpected end of JSON input").
+  const text = await response.text();
+  if (text.length === 0) return (response.status === 204 ? undefined : null) as T;
+  return JSON.parse(text) as T;
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────
@@ -375,7 +416,12 @@ async function authenticate(path: "/auth/register" | "/auth/login", body: Regist
   setSession({
     accessToken: result.accessToken,
     refreshToken: result.refreshToken,
-    user: { id: result.user.id, email: result.user.email, name: result.user.name },
+    user: {
+      id: result.user.id,
+      email: result.user.email,
+      name: result.user.name,
+      onboarded: result.user.onboardedAt !== null,
+    },
   });
   return result;
 }
@@ -406,6 +452,45 @@ export async function logout(): Promise<void> {
 
 export function getMe(): Promise<AuthUser> {
   return apiRequest<AuthUser>("/auth/me");
+}
+
+export function updateMe(body: UpdateMeRequest): Promise<AuthUser> {
+  return apiRequest<AuthUser>("/auth/me", { method: "PATCH", body: JSON.stringify(body) });
+}
+
+// 400 if no niche is set yet. Idempotent: the original onboardedAt is never
+// moved. Also flips the local session's onboarded flag so RequireAuth lets
+// the founder into the product without another round-trip.
+export async function completeOnboarding(): Promise<AuthUser> {
+  const user = await apiRequest<AuthUser>("/auth/me/onboarding", { method: "POST" });
+  setSessionOnboarded(user.onboardedAt !== null);
+  return user;
+}
+
+// ── Audiences ────────────────────────────────────────────────────────────
+// Always the logged-in founder's own; another founder's id 404s.
+export function listAudiences(page = 1, limit = 50): Promise<PaginatedAudiences> {
+  return apiRequest<PaginatedAudiences>(`/audiences?page=${page}&limit=${limit}`);
+}
+
+export function createAudience(body: CreateAudienceRequest): Promise<Audience> {
+  return apiRequest<Audience>("/audiences", { method: "POST", body: JSON.stringify(body) });
+}
+
+// Safe for history: past Sends keep their own frozen audienceSizeSnapshot.
+export function updateAudience(audienceId: string, body: UpdateAudienceRequest): Promise<Audience> {
+  return apiRequest<Audience>(`/audiences/${audienceId}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+
+// ── Voice sample (drafting voice reference) ─────────────────────────────
+// null when the founder never submitted one.
+export function getVoiceSample(): Promise<VoiceSample | null> {
+  return apiRequest<VoiceSample | null>("/voice-profile");
+}
+
+// 40–4000 chars (SetVoiceSampleDto). Upsert: re-submitting replaces it.
+export function setVoiceSample(styleSample: string): Promise<VoiceSample> {
+  return apiRequest<VoiceSample>("/voice-profile", { method: "PUT", body: JSON.stringify({ styleSample }) });
 }
 
 export function captureStory(body: CaptureStoryRequest): Promise<Story> {

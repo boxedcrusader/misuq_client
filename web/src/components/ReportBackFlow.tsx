@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   ApiError,
-  DEV_AUDIENCES,
   getSend,
+  listAudiences,
   getStory,
   listSends,
   reportBack,
@@ -49,6 +49,22 @@ export function ReportBackFlow() {
   const [submitError, setSubmitError] = useState<ApiError | null>(null);
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [storyStatus, setStoryStatus] = useState<string | null>(null);
+  // id -> name, for "Sent to …" labels. GET /sends/:id doesn't include the
+  // Audience, so this joins client-side. Best-effort: a failed load just
+  // falls back to a generic label — it's display only.
+  const [audienceNames, setAudienceNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    listAudiences()
+      .then((page) => {
+        if (!cancelled) setAudienceNames(Object.fromEntries(page.data.map((a) => [a.id, a.name])));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Used by the "choose a different send" button handler (an event handler,
   // not an effect — calling setState there is unremarkable).
@@ -138,7 +154,6 @@ export function ReportBackFlow() {
             </p>
           )}
           {sends?.map((send) => {
-            const audience = DEV_AUDIENCES.find((a) => a.id === send.audienceId);
             return (
               <button
                 key={send.id}
@@ -155,7 +170,7 @@ export function ReportBackFlow() {
                   <StatusBadge status={send.contentPiece.story.status} />
                 </div>
                 <span className="text-[13px] text-text-muted-3">
-                  Sent to {audience?.name ?? send.audienceId} · {send.audienceSizeSnapshot} readers
+                  Sent to {audienceNames[send.audienceId] ?? "your audience"} · {send.audienceSizeSnapshot} readers
                 </span>
               </button>
             );
@@ -180,7 +195,7 @@ export function ReportBackFlow() {
               <span className="text-[12px] text-text-faint">{selectedSend.contentPiece.channel}</span>
             </div>
             <p className="text-[13px] text-text-muted-3">
-              Sent to {DEV_AUDIENCES.find((a) => a.id === selectedSend.audienceId)?.name ?? selectedSend.audienceId} ·{" "}
+              Sent to {audienceNames[selectedSend.audienceId] ?? "your audience"} ·{" "}
               {selectedSend.audienceSizeSnapshot} readers
             </p>
           </div>

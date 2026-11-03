@@ -3,11 +3,12 @@
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { logout } from "@/lib/api";
+import { getMe, logout } from "@/lib/api";
 import {
   getServerSessionSnapshot,
   getSessionSnapshot,
   parseSessionSnapshot,
+  setSessionOnboarded,
   subscribeSession,
 } from "@/lib/session";
 
@@ -20,11 +21,41 @@ import {
 // Subscribes to the session store, so it also reacts when the session ends
 // mid-visit: a refresh token rejected by the backend (api.ts clears the
 // session) or a logout in another tab both redirect here, no reload needed.
-export function RequireAuth({ children }: { children: ReactNode }) {
+//
+// Also the onboarding gate: product screens send a founder who hasn't
+// finished onboarding to /onboarding (which itself renders with
+// requireOnboarded={false}). Like the auth check, it's routing, not
+// enforcement — the backend's real guards (e.g. report-back's niche check)
+// still apply either way.
+export function RequireAuth({
+  children,
+  requireOnboarded = true,
+}: {
+  children: ReactNode;
+  requireOnboarded?: boolean;
+}) {
   const router = useRouter();
   const snapshot = useSyncExternalStore(subscribeSession, getSessionSnapshot, getServerSessionSnapshot);
   const session = snapshot === undefined ? undefined : parseSessionSnapshot(snapshot);
   const loggingOut = useRef(false);
+  // Primitive, so it's a stable effect dependency (session is re-parsed —
+  // a new object — on every render).
+  const onboarded = session ? session.user.onboarded : undefined;
+  const hasSession = Boolean(session);
+
+  // Sessions stored before onboarding existed don't carry the flag: resolve
+  // it once from the server. A failure leaves it unknown; a dead session is
+  // already handled by api.ts clearing it.
+  useEffect(() => {
+    if (!hasSession || onboarded !== undefined) return;
+    getMe()
+      .then((user) => setSessionOnboarded(user.onboardedAt !== null))
+      .catch(() => {});
+  }, [hasSession, onboarded]);
+
+  useEffect(() => {
+    if (requireOnboarded && onboarded === false) router.replace("/onboarding");
+  }, [requireOnboarded, onboarded, router]);
 
   useEffect(() => {
     // undefined = prerender/hydration, not yet known — never redirect on it.
@@ -41,7 +72,9 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     router.replace("/login");
   }
 
-  if (!session) {
+  // Hold the screen while the session — or, on product screens, the
+  // onboarding state — is unknown or about to redirect.
+  if (!session || (requireOnboarded && onboarded !== true)) {
     return <div className="min-h-screen" aria-busy="true" />;
   }
 

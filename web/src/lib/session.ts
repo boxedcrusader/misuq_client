@@ -16,6 +16,10 @@ export interface SessionUser {
   id: string;
   email: string;
   name: string | null;
+  // Mirrors User.onboardedAt !== null. Optional because sessions stored
+  // before onboarding existed don't have it: undefined = unknown, and
+  // RequireAuth resolves it with one GET /auth/me.
+  onboarded?: boolean;
 }
 
 export interface Session {
@@ -63,6 +67,11 @@ export function setSession(session: Session): void {
 export function updateTokens(tokens: { accessToken: string; refreshToken: string }): void {
   const current = getSession();
   if (current) setSession({ ...current, ...tokens });
+}
+
+export function setSessionOnboarded(onboarded: boolean): void {
+  const current = getSession();
+  if (current) setSession({ ...current, user: { ...current.user, onboarded } });
 }
 
 export function clearSession(): void {

@@ -52,10 +52,13 @@ export function LoginScreen() {
     try {
       if (mode === "login") {
         await login({ email, password });
+        // A founder who never finished onboarding is bounced there by
+        // RequireAuth on arrival, so `next` is always safe to use here.
+        router.replace(next);
       } else {
         await register({ email, password, ...(name.trim() ? { name: name.trim() } : {}) });
+        router.replace("/onboarding");
       }
-      router.replace(next);
     } catch (err) {
       setError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
       setSubmitting(false);
