@@ -580,14 +580,23 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
                   </button>
                 </div>
               )}
-              <label className="flex flex-col gap-1.5">
-                <span className="text-[12.5px] font-medium text-text-muted-2">
-                  {pieceLocked
-                    ? piece.status === "SENT"
-                      ? "Sent, so it's locked: your report-back has to match what the room saw."
-                      : "Archived, so it's read-only."
-                    : "Your draft. Edit it right here until you send it."}
-                </span>
+              {/* A div, not a <label>: a label containing the Copy button would
+                  label the button instead of the textarea (it keeps its
+                  aria-label). Copy is here so it's there in every state; the
+                  next-step panel's copy disappears once a draft is sent. */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[12.5px] font-medium text-text-muted-2">
+                    {pieceLocked
+                      ? piece.status === "SENT"
+                        ? "Sent, so it's locked: your report-back has to match what the room saw."
+                        : "Archived, so it's read-only."
+                      : "Your draft. Edit it right here until you send it."}
+                  </span>
+                  <div className="shrink-0">
+                    <CopyButton text={bodyDraft} label="Copy" />
+                  </div>
+                </div>
                 <textarea
                   value={bodyDraft}
                   onChange={(e) => setEdits((prev) => ({ ...prev, [piece.id]: e.target.value }))}
@@ -598,7 +607,7 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
                     pieceLocked ? "border-border-hairline text-text-muted" : hasUnsavedEdits ? "border-indigo" : "border-border-input focus:border-indigo"
                   }`}
                 />
-              </label>
+              </div>
               {activeFormat === "X" && (
                 <p className={`text-[12.5px] ${xCount > X_MAX_CHARS ? "font-semibold text-deep-ink" : "text-text-faint"}`}>
                   {xCount}/{X_MAX_CHARS} characters

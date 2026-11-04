@@ -121,6 +121,7 @@ Separate from the static landing page above: real screens wired to `../service`'
   - **Editing was already possible but hard to find.** Home's drafted rows have an **Edit** button. A row is now a `div` with a stretched `Link` (`absolute inset-0`) under a `z-10` Edit link, since links can't nest. The "Next up" card for a drafted update links "Review or edit the draft". On `/send`, "Edit draft" is a bordered button.
   - On `/capture`:
     - "Your draft. Edit it right here until you send it", with an "Unsaved changes" state.
+    - A **Copy** button beside the draft in every state (added after review): the next-step panel's copy disappears once a draft is sent or archived, which left a sent post with no copy button. The wrapper is a `div`, not a `<label>`, because a label containing a button would label the button.
     - Sent or archived drafts are `readOnly`, with the reason shown.
     - **Edit** the captured update itself (inline), until sent. After a change, a "Redraft it" prompt appears.
     - **Redraft** (uses a daily draft; disabled while there are unsaved edits).
