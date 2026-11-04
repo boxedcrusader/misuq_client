@@ -117,6 +117,23 @@ Separate from the static landing page above: real screens wired to `../service`'
   - `/graduate` success links to each format (`/capture?story=&format=`). `/report-back` labels public rooms "Posted to … · N followers".
   - Labels: `labels.ts` has `CHANNEL_LABELS`, `DRAFT_FORMATS`, `formatForRoom`, `isPublicRoom`, `formatNoun`/`withArticle` ("an X post", "a LinkedIn post"); `AUDIENCE_TYPE_LABELS` gained "My X followers" / "My LinkedIn network". Copy in home, onboarding, the guide and the send screen now says a room can be your followers.
 
+- [x] Edit, delete/archive, profile + analytics (2026-11-04, founder request; backend rules in `../service/CLAUDE.md` §8).
+  - **Editing was already possible but hard to find.** Home's drafted rows have an **Edit** button. A row is now a `div` with a stretched `Link` (`absolute inset-0`) under a `z-10` Edit link, since links can't nest. The "Next up" card for a drafted update links "Review or edit the draft". On `/send`, "Edit draft" is a bordered button.
+  - On `/capture`:
+    - "Your draft. Edit it right here until you send it", with an "Unsaved changes" state.
+    - Sent or archived drafts are `readOnly`, with the reason shown.
+    - **Edit** the captured update itself (inline), until sent. After a change, a "Redraft it" prompt appears.
+    - **Redraft** (uses a daily draft; disabled while there are unsaved edits).
+    - **Delete this draft**, and a footer with **Delete this update** (unsent) or **Archive this update** (sent). Both deletes confirm in-page (`ConfirmBox`, never a browser dialog) and say they don't give back today's drafts.
+    - Archived updates show a banner with **Restore**. 409s read in founder words (`describeManageError`).
+    - "Start over" (which only cleared the screen and left the story saved) is gone.
+  - Home shows an "Archived · N" link (the `ARCHIVED` filter) when there are any. `STATUS_INFO.STAGED.hint` is "Report back after ~48h".
+  - **`/profile` (`ProfileFlow.tsx`), linked in the header.** On phones, Log out moves into the page (the header is `hidden sm:inline` for it), and "How it works" reads "Guide". Measured in a narrow iframe, the header fits down to ~341px; before this change it was 385px wide.
+    - **Your numbers:** stat tiles, plus "your usual" (replies per 1,000 views), which says "too early to tell" under 3 rated posts. Then the best post, "What X ranks on" (quotes, reposts, bookmarks, shares, new followers), by format and by room (each "Too early (n of 3)"), and the reported posts marked "Above/Below your usual". Per the dataviz rules there are no charts (each figure is one number, so it's a stat tile), and the AI-use meters are indigo on the same-hue `context-fill` track, with near-limit shown in words.
+    - **Today's AI use**, **About you** (name, which drafts sign with; niche), **Your voice** (voice sample, 40–4000 chars; before this it could only be set in onboarding), **Your rooms** (list + add).
+    - `updateMe` now also updates the session's name (`setSessionName`), so the home greeting follows a rename.
+  - `/report-back`: asks for the post's analytics numbers (views, replies, quotes, reposts, bookmarks, shares, new followers) and says to report back after ~48 hours.
+
 ## Running
 
 ```bash

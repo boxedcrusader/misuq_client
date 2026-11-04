@@ -305,7 +305,10 @@ function SendFlowInner({ storyId, format }: { storyId: string | null; format: st
               <p className="whitespace-pre-line text-[14px] leading-[1.5] text-text-muted">{piece.body}</p>
               <div className="mt-3 flex items-center gap-3">
                 <CopyButton text={piece.body} />
-                <Link href={`/capture?story=${selectedStory.id}&format=${piece.channel}`} className="text-[13px] font-medium text-text-muted-2 hover:text-indigo">
+                <Link
+                  href={`/capture?story=${selectedStory.id}&format=${piece.channel}`}
+                  className="rounded-full border border-border-input px-4 py-2 text-[13px] font-semibold text-deep-ink transition-colors hover:border-indigo hover:text-indigo"
+                >
                   Edit draft
                 </Link>
               </div>

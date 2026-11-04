@@ -147,10 +147,16 @@ function NextUpCard({ hero, snippet }: { hero: Hero; snippet: string | null }) {
           <Link href={copy.href} className={PRIMARY}>
             {copy.cta}
           </Link>
-          {hero.kind !== "capture" && (
-            <Link href="/capture" className="text-[13.5px] font-medium text-on-dark-body hover:text-on-dark-heading">
-              or capture something new
+          {hero.kind === "send" ? (
+            <Link href={`/capture?story=${hero.story.id}`} className="text-[13.5px] font-medium text-on-dark-body hover:text-on-dark-heading">
+              Review or edit the draft
             </Link>
+          ) : (
+            hero.kind !== "capture" && (
+              <Link href="/capture" className="text-[13.5px] font-medium text-on-dark-body hover:text-on-dark-heading">
+                or capture something new
+              </Link>
+            )
           )}
         </div>
       </div>
@@ -256,12 +262,13 @@ function UpdateRow({ story, hasRoom }: { story: Story; hasRoom: boolean }) {
   // A draft-only founder's draft opens on the capture screen to be copied.
   const href = story.status === "DRAFTED" && !hasRoom ? `/capture?story=${story.id}` : info.href(story.id);
   const action = story.status === "DRAFTED" && !hasRoom ? "Copy & post" : info.action;
+  // A drafted update with a room opens Send; its draft is one tap away.
+  const editHref = story.status === "DRAFTED" && hasRoom ? `/capture?story=${story.id}` : null;
   return (
-    <Link
-      href={href}
-      className="group flex items-center gap-4 rounded-[16px] border border-border-hairline bg-card p-4 transition-colors hover:border-indigo motion-reduce:transition-none"
-    >
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+    <div className="group relative flex items-center gap-4 rounded-[16px] border border-border-hairline bg-card p-4 transition-colors hover:border-indigo motion-reduce:transition-none">
+      {/* The whole card opens the next step; the Edit link sits above it. */}
+      <Link href={href} className="absolute inset-0 rounded-[16px]" aria-label={`${action}: ${story.title ?? "Untitled update"}`} />
+      <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center gap-2 text-[11.5px]">
           <span className="rounded-full border border-border-badge bg-context-fill px-2.5 py-0.5 font-semibold uppercase tracking-[0.08em] text-indigo">
             {info.label}
@@ -271,10 +278,20 @@ function UpdateRow({ story, hasRoom }: { story: Story; hasRoom: boolean }) {
         <span className="truncate font-display text-[15px] font-semibold text-deep-ink">{story.title ?? "Untitled update"}</span>
         <span className="line-clamp-2 text-[13px] leading-[1.5] text-text-muted">{story.rawCapture}</span>
       </div>
-      <span className="shrink-0 text-[13px] font-semibold text-indigo transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
-        {action} →
-      </span>
-    </Link>
+      <div className="flex shrink-0 items-center gap-3">
+        {editHref && (
+          <Link
+            href={editHref}
+            className="relative z-10 rounded-full border border-border-input px-3 py-1 text-[12.5px] font-semibold text-deep-ink transition-colors hover:border-indigo hover:text-indigo"
+          >
+            Edit
+          </Link>
+        )}
+        <span className="pointer-events-none text-[13px] font-semibold text-indigo transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
+          {action} →
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -405,6 +422,15 @@ export function HomeHub() {
                   <UpdateRow key={story.id} story={story} hasRoom={hasRoom} />
                 ))}
             </div>
+          )}
+          {counts.ARCHIVED > 0 && filter !== "ARCHIVED" && (
+            <button
+              type="button"
+              onClick={() => setFilter("ARCHIVED")}
+              className="self-start text-[12.5px] font-medium text-text-muted-2 hover:text-indigo"
+            >
+              Archived · {counts.ARCHIVED}
+            </button>
           )}
         </section>
       )}

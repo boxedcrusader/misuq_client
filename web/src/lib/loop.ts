@@ -56,7 +56,9 @@ export const LOOP_STEPS: LoopStep[] = [
 export const STATUS_INFO: Record<StoryStatus, { label: string; hint: string; action: string; href: (id: string) => string }> = {
   CAPTURED: { label: "Captured", hint: "Not drafted yet", action: "Draft it", href: (id) => `/capture?story=${id}` },
   DRAFTED: { label: "Drafted", hint: "Ready to send", action: "Send it", href: (id) => `/send?story=${id}` },
-  STAGED: { label: "Sent", hint: "Waiting to hear back", action: "Report back", href: (id) => `/report-back?story=${id}` },
+  // ~48h: about how long X keeps showing a post (its open-sourced ranking
+  // drops candidates older than that), so most of the reach is in by then.
+  STAGED: { label: "Sent", hint: "Report back after ~48h", action: "Report back", href: (id) => `/report-back?story=${id}` },
   REPORTED: { label: "Reported", hint: "Your call: go wide?", action: "Decide", href: (id) => `/graduate?story=${id}` },
   GRADUATED: { label: "Graduated", hint: "Ready for wider channels", action: "View", href: (id) => `/graduate?story=${id}` },
   ARCHIVED: { label: "Archived", hint: "Set aside", action: "View", href: (id) => `/capture?story=${id}` },
