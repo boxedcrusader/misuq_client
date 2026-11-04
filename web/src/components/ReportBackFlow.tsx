@@ -12,6 +12,7 @@ import {
   type SendWithContentPiece,
 } from "@/lib/api";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { isPublicRoom } from "@/lib/labels";
 import { useStoryParam } from "@/lib/query";
 import { toApiError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -66,12 +67,20 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
   // Audience, so this joins client-side. Best-effort: a failed load just
   // falls back to a generic label — it's display only.
   const [audienceNames, setAudienceNames] = useState<Record<string, string>>({});
+  const [publicRooms, setPublicRooms] = useState<Set<string>>(new Set());
+  // "Posted to My X followers · 1,200 followers" vs "Sent to Beta list · 42 people".
+  const roomLine = (audienceId: string, size: number) =>
+    publicRooms.has(audienceId)
+      ? `Posted to ${audienceNames[audienceId] ?? "your followers"} · ${size.toLocaleString()} followers`
+      : `Sent to ${audienceNames[audienceId] ?? "your audience"} · ${size.toLocaleString()} people`;
 
   useEffect(() => {
     let cancelled = false;
     listAudiences()
       .then((page) => {
-        if (!cancelled) setAudienceNames(Object.fromEntries(page.data.map((a) => [a.id, a.name])));
+        if (cancelled) return;
+        setAudienceNames(Object.fromEntries(page.data.map((a) => [a.id, a.name])));
+        setPublicRooms(new Set(page.data.filter((a) => isPublicRoom(a.type)).map((a) => a.id)));
       })
       .catch(() => {});
     return () => {
@@ -193,7 +202,7 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
                   <StatusBadge status={send.contentPiece.story.status} />
                 </div>
                 <span className="text-[13px] text-text-muted-3">
-                  Sent to {audienceNames[send.audienceId] ?? "your audience"} · {send.audienceSizeSnapshot} readers
+                  {roomLine(send.audienceId, send.audienceSizeSnapshot)}
                 </span>
               </button>
             );
@@ -218,8 +227,7 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
               <span className="text-[12px] text-text-faint">{selectedSend.contentPiece.channel}</span>
             </div>
             <p className="text-[13px] text-text-muted-3">
-              Sent to {audienceNames[selectedSend.audienceId] ?? "your audience"} ·{" "}
-              {selectedSend.audienceSizeSnapshot} readers
+              {roomLine(selectedSend.audienceId, selectedSend.audienceSizeSnapshot)}
             </p>
           </div>
 

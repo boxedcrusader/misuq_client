@@ -25,16 +25,16 @@ export const LOOP_STEPS: LoopStep[] = [
     number: "02",
     name: "Draft",
     status: "DRAFTED",
-    summary: "Misuq writes a short post in your voice.",
-    detail: "It only uses facts you gave it, never invented numbers. Edit it until it sounds like you.",
+    summary: "Misuq writes it in your voice, for the platform you pick.",
+    detail: "An X post, a LinkedIn post or an email — each with that platform's rules. Only facts you gave it, never invented numbers. Edit it until it sounds like you.",
   },
   {
     number: "03",
     name: "Send",
     status: "STAGED",
-    summary: "Test it on your small room first.",
+    summary: "Try it on one room first.",
     detail:
-      "Share it with a few people who know you: an email list, a Discord, beta users, three founder friends. Misuq never posts or emails for you — you copy it, share it, then mark it sent.",
+      "Post it to your X or LinkedIn followers, or share it with a small group: an email list, a Discord, beta users, three founder friends. Misuq never posts for you — you copy it, post or share it, then mark it done.",
   },
   {
     number: "04",
@@ -47,8 +47,8 @@ export const LOOP_STEPS: LoopStep[] = [
     number: "05",
     name: "Graduate",
     status: "GRADUATED",
-    summary: "You decide when it's ready to go wide.",
-    detail: "If the small room liked it, graduate it for X, LinkedIn or your blog. It's always your call, never automatic.",
+    summary: "You decide when it's ready to go everywhere.",
+    detail: "If it landed, graduate it and Misuq redrafts the same story for your other channels. It's always your call, never automatic.",
   },
 ];
 

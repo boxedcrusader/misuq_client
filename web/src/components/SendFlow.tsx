@@ -14,8 +14,8 @@ import {
   type Story,
   type StoryWithContentPieces,
 } from "@/lib/api";
-import { AUDIENCE_TYPE_LABELS, humanizeEnum } from "@/lib/labels";
-import { useStoryParam } from "@/lib/query";
+import { AUDIENCE_TYPE_LABELS, CHANNEL_LABELS, X_MAX_CHARS, formatForRoom, humanizeEnum, isPublicRoom, withArticle } from "@/lib/labels";
+import { useFormatParam, useStoryParam } from "@/lib/query";
 import { AudienceForm } from "@/components/AudienceForm";
 import { CopyButton } from "@/components/CopyButton";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -72,10 +72,17 @@ function describeStageError(error: ApiError, audienceName: string): string | und
 // a plain /send) always starts from a clean screen.
 export function SendFlow() {
   const storyId = useStoryParam();
-  return <SendFlowInner key={storyId ?? "none"} storyId={storyId} />;
+  const format = useFormatParam();
+  return <SendFlowInner key={`${storyId ?? "none"}:${format ?? ""}`} storyId={storyId} format={format} />;
 }
 
-function SendFlowInner({ storyId }: { storyId: string | null }) {
+// The newest piece in the requested format, else the newest piece overall.
+function pieceFor(pieces: ContentPiece[], format: string | null): ContentPiece | null {
+  const inFormat = format ? pieces.filter((p) => p.channel === format) : [];
+  return latestPiece(inFormat.length > 0 ? inFormat : pieces);
+}
+
+function SendFlowInner({ storyId, format }: { storyId: string | null; format: string | null }) {
   const [draftedStories, setDraftedStories] = useState<Story[] | null>(null);
   const [listError, setListError] = useState<ApiError | null>(null);
 
@@ -91,6 +98,8 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
   const [storyStatus, setStoryStatus] = useState<string | null>(null);
   const [isStaging, setIsStaging] = useState(false);
   const [stageError, setStageError] = useState<ApiError | null>(null);
+  // Which drafted format to send; ?format= from the capture screen, else newest.
+  const [pieceFormat, setPieceFormat] = useState<string | null>(format);
 
   async function loadDraftedStories() {
     setListError(null);
@@ -169,7 +178,7 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
 
   async function handleStage() {
     if (!selectedStory || !selectedDetail || !selectedAudienceId) return;
-    const piece = latestPiece(selectedDetail.contentPieces);
+    const piece = pieceFor(selectedDetail.contentPieces, pieceFormat);
     if (!piece) return;
 
     setIsStaging(true);
@@ -188,7 +197,12 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
     }
   }
 
-  const piece = selectedDetail ? latestPiece(selectedDetail.contentPieces) : null;
+  const piece = selectedDetail ? pieceFor(selectedDetail.contentPieces, pieceFormat) : null;
+  const formatsDrafted = selectedDetail ? [...new Set(selectedDetail.contentPieces.map((p) => p.channel))] : [];
+  // Rooms that fit this format first: X followers for an X post, and so on.
+  const sortedAudiences = audiences && piece
+    ? [...audiences].sort((a, b) => Number(formatForRoom(b.type) === piece.channel) - Number(formatForRoom(a.type) === piece.channel))
+    : audiences;
   const selectedAudience = audiences?.find((a) => a.id === selectedAudienceId) ?? null;
 
   function handleAudienceCreated(audience: Audience) {
@@ -202,11 +216,12 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
       <div className="flex flex-col gap-1">
         <span className="text-xs font-medium uppercase tracking-[0.12em] text-text-muted-3">Step 3 · Send</span>
         <h1 className="font-display text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[32px]">
-          Try it on your small room
+          Try it on a room first
         </h1>
         <p className="text-[14px] leading-[1.55] text-text-muted">
-          Misuq never posts or emails for you. Copy the draft, share it with a few people who know you, then mark it
-          sent here. That&apos;s when we start listening for how it landed.
+          A room is anyone who&apos;ll see it first: a small group that knows you, or your own followers on X or
+          LinkedIn. Misuq never posts for you — copy the draft, share or post it, then mark it done here. That&apos;s
+          when we start listening for how it landed.
         </p>
       </div>
 
@@ -262,16 +277,35 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
             <div className="rounded-[16px] bg-cta-panel p-4">
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo">
-                  Draft for preview
+                  {CHANNEL_LABELS[piece.channel]}
                 </span>
                 <span className="text-[12px] text-text-faint">
-                  {humanizeEnum(piece.channel)} · {humanizeEnum(piece.tone)} angle
+                  {humanizeEnum(piece.tone)} angle
+                  {piece.channel === "X" ? ` · ${[...piece.body].length}/${X_MAX_CHARS}` : ""}
                 </span>
               </div>
+              {formatsDrafted.length > 1 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {formatsDrafted.map((channel) => (
+                    <button
+                      key={channel}
+                      type="button"
+                      onClick={() => setPieceFormat(channel)}
+                      className={
+                        channel === piece.channel
+                          ? "rounded-full border border-indigo bg-card px-3 py-1 text-[12px] font-semibold text-indigo"
+                          : "rounded-full border border-border-badge px-3 py-1 text-[12px] font-medium text-text-muted-3 hover:border-indigo"
+                      }
+                    >
+                      {CHANNEL_LABELS[channel]}
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="whitespace-pre-line text-[14px] leading-[1.5] text-text-muted">{piece.body}</p>
               <div className="mt-3 flex items-center gap-3">
                 <CopyButton text={piece.body} />
-                <Link href={`/capture?story=${selectedStory.id}`} className="text-[13px] font-medium text-text-muted-2 hover:text-indigo">
+                <Link href={`/capture?story=${selectedStory.id}&format=${piece.channel}`} className="text-[13px] font-medium text-text-muted-2 hover:text-indigo">
                   Edit draft
                 </Link>
               </div>
@@ -290,18 +324,17 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
               {audiences?.length === 0 && (
                 <div className="flex flex-col gap-4 rounded-[16px] border border-border-hairline p-4">
                   <div className="flex flex-col gap-1">
-                    <p className="font-display text-[15px] font-semibold text-deep-ink">No small room yet? That&apos;s normal.</p>
+                    <p className="font-display text-[15px] font-semibold text-deep-ink">No room yet? Add one in a few seconds.</p>
                     <p className="text-[13px] leading-[1.5] text-text-muted">
-                      A small room is just a few people who&apos;ll react honestly before you post publicly. Any of
-                      these count:
+                      A room is wherever this goes first. It doesn&apos;t have to be private — any of these count:
                     </p>
                   </div>
                   <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {[
+                      "Your X followers",
+                      "Your LinkedIn network",
+                      "A Discord, Slack or email list",
                       "3 founder friends in a group chat",
-                      "A Discord or Slack you're active in",
-                      "Your first beta users",
-                      "People who replied to you before",
                     ].map((idea) => (
                       <li key={idea} className="flex items-center gap-2 rounded-[12px] bg-context-fill px-3 py-2 text-[13px] text-text-muted">
                         <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo" />
@@ -320,7 +353,7 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
                 </div>
               )}
               <div className="flex flex-col gap-2">
-                {audiences?.map((audience) => {
+                {sortedAudiences?.map((audience) => {
                   const staged = stagedByAudienceId[audience.id];
                   const active = selectedAudienceId === audience.id;
                   return (
@@ -346,7 +379,8 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
                       <span className="flex flex-col">
                         <span className="text-[14px] font-semibold text-deep-ink">{audience.name}</span>
                         <span className="text-[12px] text-text-muted-3">
-                          {AUDIENCE_TYPE_LABELS[audience.type]} · {audience.size} readers
+                          {AUDIENCE_TYPE_LABELS[audience.type]} · {audience.size.toLocaleString()}{" "}
+                          {isPublicRoom(audience.type) ? "followers" : "people"}
                         </span>
                       </span>
                       {staged && (
@@ -359,6 +393,19 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
                 })}
               </div>
 
+              {piece && selectedAudience && formatForRoom(selectedAudience.type) !== piece.channel && (
+                <p className="text-[12.5px] leading-[1.5] text-text-muted-2">
+                  This is {withArticle(piece.channel)}, and{" "}
+                  {selectedAudience.name} is {AUDIENCE_TYPE_LABELS[selectedAudience.type].toLowerCase()}.{" "}
+                  <Link
+                    href={`/capture?story=${selectedStory.id}&format=${formatForRoom(selectedAudience.type)}`}
+                    className="font-semibold text-indigo hover:text-indigo-hover"
+                  >
+                    Draft {withArticle(formatForRoom(selectedAudience.type))} instead
+                  </Link>{" "}
+                  or send this one anyway.
+                </p>
+              )}
               {audiences !== null && audiences.length > 0 && (
               <button
                 type="button"
@@ -369,7 +416,9 @@ function SendFlowInner({ storyId }: { storyId: string | null }) {
                 {isStaging
                   ? "Saving…"
                   : selectedAudience
-                    ? `I've sent it to ${selectedAudience.name} →`
+                    ? isPublicRoom(selectedAudience.type)
+                      ? `I've posted it to ${selectedAudience.name} →`
+                      : `I've sent it to ${selectedAudience.name} →`
                     : "Pick a room above"}
               </button>
               )}
