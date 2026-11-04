@@ -108,6 +108,14 @@ export function describeError(error: ApiError): ErrorCopy {
           action: "none",
         };
       }
+      // The backend's global cap across all accounts (service usage-limits.ts).
+      if (/AI capacity for all accounts/.test(message)) {
+        return {
+          title: "Misuq is at capacity today",
+          detail: "We've hit today's limit for everyone during the beta. Your work is saved — try again tomorrow.",
+          action: "none",
+        };
+      }
       return {
         title: "One moment",
         detail: "That was a lot of tries in a short time. Wait a minute, then try again.",
