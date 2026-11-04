@@ -16,6 +16,7 @@ import {
 import { AUDIENCE_TYPE_LABELS, NICHE_LABELS } from "@/lib/labels";
 import { AudienceForm } from "@/components/AudienceForm";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { toApiError } from "@/lib/errors";
 
 // First-run setup for a new founder: the three things the loop needs that
 // signup doesn't ask for.
@@ -35,10 +36,6 @@ const STEP_NUMBER: Record<Step, number> = { niche: 1, audience: 2, voice: 3 };
 const NICHES = Object.keys(NICHE_LABELS) as Niche[];
 const VOICE_MIN = 40;
 const VOICE_MAX = 4000;
-
-function toApiError(err: unknown): ApiError {
-  return err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) });
-}
 
 const PRIMARY_BUTTON =
   "rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold text-on-indigo shadow-[0_10px_22px_-8px_rgba(91,79,233,0.55)] disabled:cursor-not-allowed disabled:bg-context-fill disabled:text-text-faint disabled:shadow-none";
@@ -114,7 +111,7 @@ export function OnboardingFlow() {
   const voiceValid = voiceLength >= VOICE_MIN && voiceLength <= VOICE_MAX;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 py-16 sm:py-20">
+    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 pb-16 pt-24 sm:pb-20 sm:pt-28">
       <span className="text-xs font-medium uppercase tracking-[0.12em] text-text-muted-3">
         Getting started · {STEP_NUMBER[step]} of 3
       </span>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { CaptureFlow } from "@/components/CaptureFlow";
 import { RequireAuth } from "@/components/RequireAuth";
 
@@ -8,7 +9,10 @@ import { RequireAuth } from "@/components/RequireAuth";
 export default function CapturePage() {
   return (
     <RequireAuth>
-      <CaptureFlow />
+      {/* Required by useSearchParams (the ?story= deep link) under static export. */}
+      <Suspense fallback={<div className="min-h-screen" aria-busy="true" />}>
+        <CaptureFlow />
+      </Suspense>
     </RequireAuth>
   );
 }

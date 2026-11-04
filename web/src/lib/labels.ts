@@ -25,3 +25,10 @@ export const AUDIENCE_TYPE_LABELS: Record<AudienceType, string> = {
   BETA_USERS: "Beta users",
   PEERS: "Founder friends / peers",
 };
+
+// "EMAIL" → "Email", "LESSON_LEARNED" → "Lesson learned": for enum values
+// shown as small print (a draft's channel and angle).
+export function humanizeEnum(value: string): string {
+  const words = value.toLowerCase().split("_");
+  return words.join(" ").replace(/^./, (c) => c.toUpperCase());
+}

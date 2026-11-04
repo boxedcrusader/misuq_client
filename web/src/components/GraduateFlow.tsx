@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { ApiError, graduateStory, listStories, type Story } from "@/lib/api";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { useStoryParam } from "@/lib/query";
+import { toApiError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
 
 // Web translation of design_handoff_misuq_flow's Graduate screen's summary +
@@ -34,16 +36,25 @@ import { StatusBadge } from "@/components/StatusBadge";
 // pattern ReportBackFlow uses to make the duplicate-report 409 reachable),
 // rather than only being triggerable via a same-request double-click race.
 
-function describeGraduateError(error: ApiError): string {
+// undefined = the shared wording from lib/errors.ts.
+function describeGraduateError(error: ApiError): string | undefined {
   if (error.statusCode === 409 && /is already GRADUATED/.test(error.message)) {
     return "This story has already graduated.";
   }
-  // Covers the not-REPORTED 400 verbatim, per the same "these are the state
-  // machine talking, display them" treatment as the other screens' guards.
-  return error.message;
+  if (error.statusCode === 400 && /only a REPORTED story can be graduated/.test(error.message)) {
+    return "Report back on this story first — graduating needs to know how it landed.";
+  }
+  return undefined;
 }
 
+// Remounts per ?story= value, so following a link to another update (or to
+// a plain /graduate) always starts from a clean screen.
 export function GraduateFlow() {
+  const storyId = useStoryParam();
+  return <GraduateFlowInner key={storyId ?? "none"} storyId={storyId} />;
+}
+
+function GraduateFlowInner({ storyId }: { storyId: string | null }) {
   const [stories, setStories] = useState<Story[] | null>(null);
   const [listError, setListError] = useState<ApiError | null>(null);
 
@@ -61,7 +72,7 @@ export function GraduateFlow() {
         setStories(page.data.filter((s) => s.status === "REPORTED" || s.status === "GRADUATED"));
       })
       .catch((err) => {
-        setListError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+        setListError(toApiError(err));
       });
   }
 
@@ -73,19 +84,23 @@ export function GraduateFlow() {
     let cancelled = false;
     listStories(1, 20)
       .then((page) => {
-        if (!cancelled) {
-          setStories(page.data.filter((s) => s.status === "REPORTED" || s.status === "GRADUATED"));
-        }
+        if (cancelled) return;
+        const eligible = page.data.filter((s) => s.status === "REPORTED" || s.status === "GRADUATED");
+        setStories(eligible);
+        // ?story=<id> from the home page opens that story directly.
+        const wanted = storyId;
+        const match = wanted ? eligible.find((s) => s.id === wanted) : undefined;
+        if (match) handleSelectStory(match);
       })
       .catch((err) => {
         if (!cancelled) {
-          setListError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+          setListError(toApiError(err));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [storyId]);
 
   function handleSelectStory(story: Story) {
     setSelectedStory(story);
@@ -113,16 +128,16 @@ export function GraduateFlow() {
       const graduated = await graduateStory(selectedStory.id);
       setGraduateResult(graduated);
     } catch (err) {
-      setGraduateError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+      setGraduateError(toApiError(err));
     } finally {
       setIsGraduating(false);
     }
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 py-16 sm:py-20">
+    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 pb-16 pt-24 sm:pb-20 sm:pt-28">
       <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium uppercase tracking-[0.12em] text-text-muted-3">Graduate</span>
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-text-muted-3">Step 5 · Graduate</span>
         <h1 className="font-display text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[32px]">
           Ready to take it wider?
         </h1>

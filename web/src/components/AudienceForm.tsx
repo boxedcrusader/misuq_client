@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ApiError, createAudience, type Audience, type AudienceType } from "@/lib/api";
 import { AUDIENCE_TYPE_LABELS } from "@/lib/labels";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { toApiError } from "@/lib/errors";
 
 const TYPES = Object.keys(AUDIENCE_TYPE_LABELS) as AudienceType[];
 
@@ -36,7 +37,7 @@ export function AudienceForm({ onCreated }: { onCreated: (audience: Audience) =>
       setType(null);
       setSize("");
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+      setError(toApiError(err));
     } finally {
       setSaving(false);
     }
