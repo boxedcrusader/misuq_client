@@ -74,6 +74,12 @@ export function setSessionOnboarded(onboarded: boolean): void {
   if (current) setSession({ ...current, user: { ...current.user, onboarded } });
 }
 
+// The profile page renames the founder; the home greeting reads this copy.
+export function setSessionName(name: string | null): void {
+  const current = getSession();
+  if (current) setSession({ ...current, user: { ...current.user, name } });
+}
+
 export function clearSession(): void {
   try {
     window.localStorage.removeItem(STORAGE_KEY);

@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ApiError,
+  archiveStory,
   captureStory,
+  deleteContentPiece,
+  deleteStory,
   draftStory,
   getStory,
   listAudiences,
+  unarchiveStory,
   updateContentPiece,
+  updateStory,
   type Audience,
   type ContentPiece,
   type ContentType,
@@ -90,6 +96,30 @@ function latestByFormat(pieces: ContentPiece[]): Partial<Record<DraftChannel, Co
   return out;
 }
 
+// The three refusals editing/deleting can hit (service capture.service.ts /
+// content-pieces.service.ts), in founder words. undefined = lib/errors.ts.
+function describeManageError(error: ApiError): { title: string; message: string } | undefined {
+  if (error.statusCode !== 409) return undefined;
+  if (/archive it instead|has been sent|can't be changed|can't be deleted/.test(error.message)) {
+    return {
+      title: "Already sent",
+      message: "A room has seen this update, so it can't be changed or deleted. You can archive it instead.",
+    };
+  }
+  if (/archived/.test(error.message)) {
+    return { title: "It's archived", message: "Restore it first to make changes." };
+  }
+  if (/changed while/.test(error.message)) {
+    return { title: "Something changed", message: "This update moved on in the meantime. Refresh and try again." };
+  }
+  return undefined;
+}
+
+const SECONDARY =
+  "rounded-full border border-border-input px-4 py-2 text-[13px] font-semibold text-deep-ink transition-colors hover:border-indigo hover:text-indigo disabled:cursor-not-allowed disabled:opacity-50";
+const QUIET = "text-[13px] font-medium text-text-muted-2 transition-colors hover:text-indigo disabled:opacity-50";
+const DANGER_QUIET = "text-[13px] font-medium text-text-muted-2 transition-colors hover:text-deep-ink hover:underline disabled:opacity-50";
+
 const PRIMARY =
   "rounded-full bg-indigo px-5 py-2.5 text-[14px] font-semibold text-on-indigo shadow-[0_10px_22px_-8px_rgba(91,79,233,0.55)] transition-colors hover:bg-indigo-hover disabled:cursor-not-allowed disabled:bg-context-fill disabled:text-text-faint disabled:shadow-none";
 
@@ -153,6 +183,19 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
   const [isOpening, setIsOpening] = useState(storyId !== null);
   const [openError, setOpenError] = useState<ApiError | null>(null);
 
+  // Editing the captured update itself, and deleting / archiving
+  // (2026-11-04). Allowed until anything is sent; after that, archive only.
+  const router = useRouter();
+  const [isEditingCapture, setIsEditingCapture] = useState(false);
+  const [captureText, setCaptureText] = useState("");
+  const [captureTitle, setCaptureTitle] = useState("");
+  const [isSavingCapture, setIsSavingCapture] = useState(false);
+  const [captureEditError, setCaptureEditError] = useState<ApiError | null>(null);
+  const [captureChanged, setCaptureChanged] = useState(false);
+  const [confirming, setConfirming] = useState<"piece" | "story" | null>(null);
+  const [isWorking, setIsWorking] = useState(false);
+  const [manageError, setManageError] = useState<ApiError | null>(null);
+
   // ?story=<id> (from the home page) reopens an existing update: a CAPTURED
   // one at its "Draft it" step, a drafted one at its drafts.
   useEffect(() => {
@@ -200,6 +243,17 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
 
   const canCapture = rawCapture.trim().length > 0 && !isCapturing;
 
+  const status = drafted?.status ?? story?.status ?? null;
+  const isArchived = status === "ARCHIVED";
+  const wasSentStatus = (st: string | null | undefined) => st === "STAGED" || st === "REPORTED" || st === "GRADUATED";
+  // Sent = a room has seen something from this story: then it's frozen.
+  const anySent =
+    (drafted?.contentPieces ?? []).some((p) => p.status === "SENT") ||
+    wasSentStatus(status) ||
+    (isArchived && wasSentStatus(story?.archivedFromStatus));
+  const canChangeCapture = story !== null && !isArchived && !anySent;
+  const pieceLocked = piece !== null && (piece.status === "SENT" || isArchived);
+
   async function handleCapture() {
     setIsCapturing(true);
     setCaptureError(null);
@@ -229,6 +283,7 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
       const refreshed = await getStory(story.id);
       setDrafted(refreshed);
       setChosenFormat(format);
+      setCaptureChanged(false);
     } catch (err) {
       setDraftError(toApiError(err));
     } finally {
@@ -253,6 +308,84 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
     }
   }
 
+  // A write that returns the Story (no pieces) updates both copies.
+  function applyStory(updated: Story) {
+    setStory(updated);
+    setDrafted((prev) => (prev ? { ...prev, ...updated } : prev));
+  }
+
+  function startEditingCapture() {
+    if (!story) return;
+    setCaptureText(story.rawCapture);
+    setCaptureTitle(story.title ?? "");
+    setCaptureEditError(null);
+    setIsEditingCapture(true);
+  }
+
+  async function handleSaveCapture() {
+    if (!story || captureText.trim().length === 0) return;
+    setIsSavingCapture(true);
+    setCaptureEditError(null);
+    try {
+      const updated = await updateStory(story.id, { rawCapture: captureText.trim(), title: captureTitle.trim() });
+      if (drafted && drafted.contentPieces.length > 0 && updated.rawCapture !== story.rawCapture) setCaptureChanged(true);
+      applyStory(updated);
+      setIsEditingCapture(false);
+    } catch (err) {
+      setCaptureEditError(toApiError(err));
+    } finally {
+      setIsSavingCapture(false);
+    }
+  }
+
+  async function handleDeletePiece() {
+    if (!piece || !story) return;
+    setIsWorking(true);
+    setManageError(null);
+    try {
+      await deleteContentPiece(piece.id);
+      const refreshed = await getStory(story.id);
+      const { contentPieces, ...base } = refreshed;
+      setStory(base);
+      // The last draft gone: the story is back to CAPTURED, so show the
+      // format picker again.
+      setDrafted(contentPieces.length > 0 ? refreshed : null);
+      setEdits(({ [piece.id]: _gone, ...rest }) => rest);
+      setConfirming(null);
+    } catch (err) {
+      setManageError(toApiError(err));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function handleDeleteStory() {
+    if (!story) return;
+    setIsWorking(true);
+    setManageError(null);
+    try {
+      await deleteStory(story.id);
+      router.push("/home");
+    } catch (err) {
+      setManageError(toApiError(err));
+      setIsWorking(false);
+    }
+  }
+
+  async function handleArchive(archive: boolean) {
+    if (!story) return;
+    setIsWorking(true);
+    setManageError(null);
+    try {
+      applyStory(archive ? await archiveStory(story.id) : await unarchiveStory(story.id));
+      setConfirming(null);
+    } catch (err) {
+      setManageError(toApiError(err));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   function handleReset() {
     setRawCapture("");
     setTitle("");
@@ -263,6 +396,10 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
     setDraftError(null);
     setEdits({});
     setEditError(null);
+    setIsEditingCapture(false);
+    setCaptureChanged(false);
+    setConfirming(null);
+    setManageError(null);
   }
 
   const hasRoom = audiences !== null && audiences.length > 0;
@@ -286,6 +423,18 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
       )}
 
       {openError && <ErrorBanner error={openError} />}
+
+      {story && isArchived && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-border-hairline bg-cta-panel px-4 py-3">
+          <p className="text-[13.5px] leading-[1.5] text-text-muted">
+            <span className="font-semibold text-deep-ink">Archived.</span> Hidden from home and read-only. Its results
+            still count in your numbers.
+          </p>
+          <button type="button" onClick={() => handleArchive(false)} disabled={isWorking} className={SECONDARY}>
+            {isWorking ? "Restoring…" : "Restore"}
+          </button>
+        </div>
+      )}
 
       {!story && !isOpening && (
         <div className="flex flex-col gap-4 rounded-[18px] border border-border-hairline bg-card p-6">
@@ -343,19 +492,58 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
             <StatusBadge status={drafted?.status ?? story.status} />
           </div>
 
-          <div className="rounded-[16px] bg-cta-panel p-4">
-            {story.title && <p className="font-display text-[15px] font-semibold text-deep-ink">{story.title}</p>}
-            <p className="mt-1 text-[14px] leading-[1.5] text-text-muted">{story.rawCapture}</p>
-          </div>
+          {isEditingCapture ? (
+            <div className="flex flex-col gap-3 rounded-[16px] border border-indigo p-4">
+              <input
+                value={captureTitle}
+                onChange={(e) => setCaptureTitle(e.target.value)}
+                placeholder="Add a title (optional)"
+                aria-label="Title"
+                className="w-full rounded-[10px] border border-border-input bg-transparent px-3 py-2 text-[14px] text-deep-ink outline-none placeholder:text-text-muted-3 focus:border-indigo"
+              />
+              <textarea
+                value={captureText}
+                onChange={(e) => setCaptureText(e.target.value)}
+                rows={4}
+                aria-label="Your update"
+                className="w-full resize-none rounded-[10px] border border-border-input bg-transparent p-3 text-[14px] leading-[1.55] text-deep-ink outline-none focus:border-indigo"
+              />
+              <div className="flex items-center justify-end gap-4">
+                <button type="button" onClick={() => setIsEditingCapture(false)} className={QUIET}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCapture}
+                  disabled={isSavingCapture || captureText.trim().length === 0}
+                  className={PRIMARY}
+                >
+                  {isSavingCapture ? "Saving…" : "Save update"}
+                </button>
+              </div>
+              {captureEditError && <ErrorBanner error={captureEditError} {...describeManageError(captureEditError)} />}
+            </div>
+          ) : (
+            <div className="rounded-[16px] bg-cta-panel p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {story.title && <p className="font-display text-[15px] font-semibold text-deep-ink">{story.title}</p>}
+                  <p className="mt-1 whitespace-pre-line text-[14px] leading-[1.5] text-text-muted">{story.rawCapture}</p>
+                </div>
+                {canChangeCapture && (
+                  <button type="button" onClick={startEditingCapture} className={`${QUIET} shrink-0`}>
+                    Edit
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
-          {!drafted && (
+          {!drafted && !isArchived && (
             <div className="flex flex-col gap-3 pt-1">
               <span className="text-[13px] font-medium text-text-muted-2">Where will you post it first?</span>
               <FormatPicker value={activeFormat} onChange={setChosenFormat} />
-              <div className="flex items-center justify-between pt-2">
-                <button type="button" onClick={handleReset} className="text-[13px] font-medium text-text-muted-2">
-                  Start over
-                </button>
+              <div className="flex items-center justify-end pt-2">
                 <button type="button" onClick={() => handleDraft(activeFormat)} disabled={isDrafting} className={PRIMARY}>
                   {isDrafting ? "Drafting…" : `Draft it as ${withArticle(activeFormat)} →`}
                 </button>
@@ -382,29 +570,78 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
                 </span>
                 <StatusBadge status={piece.status} />
               </div>
-              <textarea
-                value={bodyDraft}
-                onChange={(e) => setEdits((prev) => ({ ...prev, [piece.id]: e.target.value }))}
-                rows={activeFormat === "X" ? 5 : 9}
-                aria-label={`${CHANNEL_LABELS[activeFormat]} draft`}
-                className="w-full resize-none rounded-[14px] border border-border-input bg-transparent p-3.5 text-[14px] leading-[1.62] text-deep-ink outline-none placeholder:text-text-faint focus:border-indigo"
-              />
+              {captureChanged && !pieceLocked && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-cta-panel px-3.5 py-2.5">
+                  <p className="text-[13px] leading-[1.5] text-text-muted">
+                    You changed the update after this draft was written.
+                  </p>
+                  <button type="button" onClick={() => handleDraft(activeFormat)} disabled={isDrafting} className={SECONDARY}>
+                    {isDrafting ? "Redrafting…" : "Redraft it"}
+                  </button>
+                </div>
+              )}
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[12.5px] font-medium text-text-muted-2">
+                  {pieceLocked
+                    ? piece.status === "SENT"
+                      ? "Sent, so it's locked: your report-back has to match what the room saw."
+                      : "Archived, so it's read-only."
+                    : "Your draft. Edit it right here until you send it."}
+                </span>
+                <textarea
+                  value={bodyDraft}
+                  onChange={(e) => setEdits((prev) => ({ ...prev, [piece.id]: e.target.value }))}
+                  readOnly={pieceLocked}
+                  rows={activeFormat === "X" ? 5 : 9}
+                  aria-label={`${CHANNEL_LABELS[activeFormat]} draft`}
+                  className={`w-full resize-none rounded-[14px] border bg-transparent p-3.5 text-[14px] leading-[1.62] text-deep-ink outline-none placeholder:text-text-faint ${
+                    pieceLocked ? "border-border-hairline text-text-muted" : hasUnsavedEdits ? "border-indigo" : "border-border-input focus:border-indigo"
+                  }`}
+                />
+              </label>
               {activeFormat === "X" && (
                 <p className={`text-[12.5px] ${xCount > X_MAX_CHARS ? "font-semibold text-deep-ink" : "text-text-faint"}`}>
                   {xCount}/{X_MAX_CHARS} characters
                   {xCount > X_MAX_CHARS ? ` — ${xCount - X_MAX_CHARS} over. Trim it before posting.` : ""}
                 </p>
               )}
-              <div className="flex items-center justify-between">
-                <button type="button" onClick={handleReset} className="text-[13px] font-medium text-text-muted-2">
-                  Capture another update
-                </button>
-                <button type="button" onClick={handleSaveEdit} disabled={!canSaveEdit} className={PRIMARY}>
-                  {isSavingEdit ? "Saving…" : "Save edits"}
-                </button>
-              </div>
+              {!pieceLocked && (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => handleDraft(activeFormat)}
+                      disabled={isDrafting || hasUnsavedEdits}
+                      title={hasUnsavedEdits ? "Save your edits first" : "Writes a fresh version (uses one of today's drafts)"}
+                      className={QUIET}
+                    >
+                      {isDrafting ? "Redrafting…" : "Redraft"}
+                    </button>
+                    <button type="button" onClick={() => setConfirming("piece")} disabled={isWorking} className={DANGER_QUIET}>
+                      Delete this draft
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {hasUnsavedEdits && <span className="text-[12.5px] font-medium text-indigo">Unsaved changes</span>}
+                    <button type="button" onClick={handleSaveEdit} disabled={!canSaveEdit} className={PRIMARY}>
+                      {isSavingEdit ? "Saving…" : "Save edits"}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {confirming === "piece" && (
+                <ConfirmBox
+                  text={`Delete this ${formatNoun(activeFormat)} draft? This can't be undone, and it doesn't give back today's draft.`}
+                  confirmLabel={isWorking ? "Deleting…" : "Delete draft"}
+                  busy={isWorking}
+                  onConfirm={handleDeletePiece}
+                  onCancel={() => setConfirming(null)}
+                />
+              )}
               {editError && <ErrorBanner error={editError} message={describeEditError(editError)} />}
             </>
+          ) : isArchived ? (
+            <p className="text-[13.5px] text-text-muted">No {formatNoun(activeFormat)} for this update.</p>
           ) : (
             <div className="flex flex-col items-start gap-3 rounded-[14px] border border-dashed border-border-input p-4">
               <p className="text-[13.5px] leading-[1.5] text-text-muted">
@@ -420,7 +657,7 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
         </div>
       )}
 
-      {drafted && piece && story && piece.status !== "SENT" && (
+      {drafted && piece && story && piece.status !== "SENT" && !isArchived && (
         <div className="flex flex-col gap-3 rounded-[18px] bg-panel p-6 text-on-dark-heading">
           <span className="text-xs font-semibold uppercase tracking-[0.1em] text-on-dark-body">Next step</span>
           {piece.stage === "WIDE" || drafted.status === "GRADUATED" ? (
@@ -477,6 +714,75 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
           )}
         </div>
       )}
+
+      {story && !isOpening && (
+        <div className="flex flex-col gap-3 border-t border-border-hairline pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button type="button" onClick={handleReset} className={QUIET}>
+              + Capture another update
+            </button>
+            {!isArchived &&
+              (anySent ? (
+                <button type="button" onClick={() => handleArchive(true)} disabled={isWorking} className={DANGER_QUIET}>
+                  {isWorking ? "Archiving…" : "Archive this update"}
+                </button>
+              ) : (
+                <button type="button" onClick={() => setConfirming("story")} disabled={isWorking} className={DANGER_QUIET}>
+                  Delete this update
+                </button>
+              ))}
+          </div>
+          {!isArchived && anySent && (
+            <p className="text-[12.5px] leading-[1.5] text-text-faint">
+              Sent updates can&apos;t be deleted. Archiving hides it from home and keeps its results in your numbers.
+            </p>
+          )}
+          {confirming === "story" && (
+            <ConfirmBox
+              text="Delete this update and all its drafts? This can't be undone, and it doesn't give back today's drafts."
+              confirmLabel={isWorking ? "Deleting…" : "Delete update"}
+              busy={isWorking}
+              onConfirm={handleDeleteStory}
+              onCancel={() => setConfirming(null)}
+            />
+          )}
+          {manageError && <ErrorBanner error={manageError} {...describeManageError(manageError)} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// An in-page confirm (never a browser dialog), for the two real deletes.
+function ConfirmBox({
+  text,
+  confirmLabel,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  text: string;
+  confirmLabel: string;
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div role="alertdialog" aria-label="Confirm delete" className="flex flex-col gap-3 rounded-[14px] border border-border-input bg-card p-4">
+      <p className="text-[13.5px] leading-[1.5] text-deep-ink">{text}</p>
+      <div className="flex items-center justify-end gap-4">
+        <button type="button" onClick={onCancel} disabled={busy} className={QUIET}>
+          Keep it
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={busy}
+          className="rounded-full bg-deep-ink px-4 py-2 text-[13px] font-semibold text-card transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {confirmLabel}
+        </button>
+      </div>
     </div>
   );
 }

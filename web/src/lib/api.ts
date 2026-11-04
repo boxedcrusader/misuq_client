@@ -31,7 +31,7 @@
 // If a field name or shape here ever differs from the real DTO/model, that's
 // a bug in THIS file to fix, not something to paper over client-side.
 
-import { clearSession, getSession, setSession, setSessionOnboarded, updateTokens } from "@/lib/session";
+import { clearSession, getSession, setSession, setSessionName, setSessionOnboarded, updateTokens } from "@/lib/session";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
@@ -80,6 +80,9 @@ export interface Story {
   title: string | null;
   contentType: ContentType;
   status: StoryStatus;
+  // Set only while ARCHIVED: where the story was, so restoring it puts it
+  // back exactly there.
+  archivedFromStatus: StoryStatus | null;
   graduatedAt: string | null; // ISO datetime, or null pre-graduation
   createdAt: string;
   updatedAt: string;
@@ -157,6 +160,13 @@ export interface SignalRecord {
   views: number | null;
   replyCount: number | null;
   signupCount: number | null;
+  // What X ranks on (2026-11-04); null = not reported.
+  likeCount: number | null;
+  repostCount: number | null;
+  quoteCount: number | null;
+  bookmarkCount: number | null;
+  shareCount: number | null;
+  newFollowerCount: number | null;
   sentiment: Sentiment | null;
   postedAt: string | null;
   followerCountSnapshot: number | null;
@@ -185,12 +195,60 @@ export interface ReportResult {
   signalRecord: SignalRecord | null;
 }
 
+// GET /stats — the founder's own numbers (service/src/modules/stats/
+// stats-core.ts). Self-relative only; every comparison is null until it
+// rests on minPostsToCompare posts ("too early to tell").
+export type RoomKind = "FOLLOWERS" | "SMALL_ROOM";
+export interface StatCounts {
+  views: number | null;
+  replies: number | null;
+  signups: number | null;
+  likes: number | null;
+  reposts: number | null;
+  quotes: number | null;
+  bookmarks: number | null;
+  shares: number | null;
+  newFollowers: number | null;
+}
+export interface PostOutcome extends StatCounts {
+  storyId: string;
+  label: string;
+  channel: Channel;
+  roomKind: RoomKind;
+  roomSize: number;
+  sentiment: Sentiment | null;
+  reportedAt: string;
+  repliesPer1kViews: number | null;
+  aboveYourUsual: boolean | null;
+}
+export interface Comparison<K> {
+  key: K;
+  posts: number;
+  rated: number;
+  repliesPer1kViews: number | null;
+  enoughData: boolean;
+}
+export interface FounderStats {
+  pipeline: Record<StoryStatus, number>;
+  totals: StatCounts & { reports: number };
+  yourUsual: { repliesPer1kViews: number | null; basedOn: number; enoughData: boolean };
+  best: PostOutcome | null;
+  byFormat: Comparison<Channel>[];
+  byRoom: Comparison<RoomKind>[];
+  posts: PostOutcome[];
+  aiUsage: { drafts: { used: number; limit: number }; reportBacks: { used: number; limit: number } };
+  minPostsToCompare: number;
+}
+
 // ── Request shapes ───────────────────────────────────────────────────────
 export interface CaptureStoryRequest {
   rawCapture: string;
   title?: string;
   contentType?: ContentType;
 }
+
+// PATCH /stories/:id. An empty title clears it.
+export type UpdateStoryRequest = Partial<CaptureStoryRequest>;
 
 export interface StageSendRequest {
   contentPieceId: string;
@@ -461,8 +519,10 @@ export function getMe(): Promise<AuthUser> {
   return apiRequest<AuthUser>("/auth/me");
 }
 
-export function updateMe(body: UpdateMeRequest): Promise<AuthUser> {
-  return apiRequest<AuthUser>("/auth/me", { method: "PATCH", body: JSON.stringify(body) });
+export async function updateMe(body: UpdateMeRequest): Promise<AuthUser> {
+  const user = await apiRequest<AuthUser>("/auth/me", { method: "PATCH", body: JSON.stringify(body) });
+  setSessionName(user.name);
+  return user;
 }
 
 // 400 if no niche is set yet. Idempotent: the original onboardedAt is never
@@ -539,6 +599,37 @@ export function updateContentPiece(contentPieceId: string, body: UpdateContentPi
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+// Editing and deleting (2026-11-04). The rule: nothing a room has seen
+// changes. 409 once any piece of the story was sent — a sent story can only
+// be archived. Deleting gives back no daily drafts.
+export function updateStory(storyId: string, body: UpdateStoryRequest): Promise<Story> {
+  return apiRequest<Story>(`/stories/${storyId}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+
+export function deleteStory(storyId: string): Promise<void> {
+  return apiRequest<void>(`/stories/${storyId}`, { method: "DELETE" });
+}
+
+// Deletes one unsent draft; deleting a story's last draft puts it back to
+// CAPTURED.
+export function deleteContentPiece(contentPieceId: string): Promise<void> {
+  return apiRequest<void>(`/content-pieces/${contentPieceId}`, { method: "DELETE" });
+}
+
+// Archive hides a story from home (read-only; its results stay in your
+// numbers); unarchive restores the exact status it had.
+export function archiveStory(storyId: string): Promise<Story> {
+  return apiRequest<Story>(`/stories/${storyId}/archive`, { method: "POST" });
+}
+
+export function unarchiveStory(storyId: string): Promise<Story> {
+  return apiRequest<Story>(`/stories/${storyId}/unarchive`, { method: "POST" });
+}
+
+export function getStats(): Promise<FounderStats> {
+  return apiRequest<FounderStats>("/stats");
 }
 
 export function stagePiece(body: StageSendRequest): Promise<Send> {

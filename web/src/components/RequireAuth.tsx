@@ -108,16 +108,24 @@ export function RequireAuth({
             </Link>
             {requireOnboarded && navLink("/home", "Home")}
             {requireOnboarded && navLink("/capture", "Capture")}
+            {requireOnboarded && navLink("/profile", "Profile")}
           </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             {requireOnboarded && (
               <button type="button" onClick={openGuide} className="shrink-0 font-medium text-text-muted-2 hover:text-indigo">
-                How it works
+                {/* Shorter on phones so the header fits at 360px with Profile in it. */}
+                <span className="sm:hidden">Guide</span>
+                <span className="hidden sm:inline">How it works</span>
               </button>
             )}
             <ThemeToggle />
             <span className="hidden max-w-[160px] truncate text-text-muted-3 md:inline">{session.user.email}</span>
-            <button type="button" onClick={handleLogout} className="shrink-0 font-medium text-text-muted-2 hover:text-indigo">
+            {/* On phones, log out lives on the profile page (header room). */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={`shrink-0 font-medium text-text-muted-2 hover:text-indigo ${requireOnboarded ? "hidden sm:inline" : ""}`}
+            >
               Log out
             </button>
           </div>

@@ -233,10 +233,18 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
 
           {!reportResult && (
             <div className="flex flex-col gap-3">
+              {/* ~48h: about how long X keeps showing a post. The counts X
+                  ranks on (quotes, shares, bookmarks, follows) are read out
+                  of the message too (2026-11-04). */}
+              <p className="text-[13px] leading-[1.55] text-text-muted">
+                Best about 48 hours after posting, once most of the views are in. Copy numbers from the post&apos;s
+                analytics if you have them (views, replies, quotes, reposts, bookmarks, shares, new followers) and say
+                what people actually wrote. Leave out anything you don&apos;t know.
+              </p>
               <textarea
                 value={rawFeedback}
                 onChange={(e) => setRawFeedback(e.target.value)}
-                placeholder="Tell Misuq how it landed… posted this morning, ~4k views, a couple people said it resonated, otherwise quiet"
+                placeholder="~1.4k views, 6 replies, 2 quotes, 9 bookmarks, 3 new followers. Someone asked if it works with Excel."
                 rows={4}
                 className="w-full resize-none rounded-[14px] border border-border-input bg-transparent p-3.5 text-[14px] leading-[1.5] text-deep-ink outline-none placeholder:text-text-faint focus:border-indigo"
               />
