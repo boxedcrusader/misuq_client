@@ -165,9 +165,9 @@ export function OnboardingFlow() {
               Where do you share updates?
             </h1>
             <p className="text-[14px] leading-[1.5] text-text-muted">
-              Misuq tests each draft on a small room you already have before it goes wide. Any of these
-              counts: an email list, a Discord, a few beta users — even a group chat with three founder
-              friends.
+              Misuq tests each draft on a room you already have before it goes everywhere. Any of these
+              counts: your X or LinkedIn followers, an email list, a Discord, a few beta users — even a
+              group chat with three founder friends.
             </p>
           </div>
 
@@ -242,8 +242,8 @@ export function OnboardingFlow() {
             <div className="rounded-[16px] bg-context-fill p-4">
               <p className="font-display text-[15px] font-semibold text-deep-ink">You&apos;re starting in draft-only mode</p>
               <p className="mt-1 text-[13px] leading-[1.5] text-text-muted">
-                You&apos;ll get drafts to post yourself. When you have a small room to test on, add it from
-                the Send screen.
+                You&apos;ll get drafts to post yourself. If you post on X or LinkedIn, add your followers as a
+                room any time, from the Send screen or your home page.
               </p>
             </div>
           )}

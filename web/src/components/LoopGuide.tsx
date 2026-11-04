@@ -137,14 +137,15 @@ export function LoopGuide({ autoOpen, userId }: { autoOpen: boolean; userId: str
 
         {isLast && (
           <div className="flex flex-col gap-4">
-            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-indigo">No small room yet?</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.1em] text-indigo">No private group?</span>
             <h2 id="loop-guide-title" className="font-display text-[24px] font-semibold leading-[1.2] tracking-[-0.02em]">
-              You can still start today.
+              Your followers count.
             </h2>
             <p className="text-[15px] leading-[1.6] text-text-muted">
-              Without anyone to test on, Misuq works in <span className="font-semibold text-deep-ink">draft-only mode</span>:
-              capture, get a draft, copy it and post it yourself. Three founder friends in a group chat already count
-              as a small room — add one whenever you&apos;re ready.
+              If you post on X or LinkedIn, add your followers as a room: post there first, report back, and take what
+              lands everywhere else. Starting from zero? Use{" "}
+              <span className="font-semibold text-deep-ink">draft-only mode</span> — capture, get a draft, copy it and
+              post it yourself.
             </p>
           </div>
         )}

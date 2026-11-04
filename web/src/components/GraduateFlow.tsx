@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ApiError, graduateStory, listStories, type Story } from "@/lib/api";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { CHANNEL_LABELS, DRAFT_FORMATS } from "@/lib/labels";
 import { useStoryParam } from "@/lib/query";
 import { toApiError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -245,12 +247,25 @@ function GraduateFlowInner({ storyId }: { storyId: string | null }) {
           )}
 
           {graduateResult && (
-            <div className="rounded-[16px] bg-context-fill p-4">
-              <p className="font-display text-[15px] font-semibold text-deep-ink">Graduated.</p>
-              <p className="mt-1 text-[13px] leading-[1.5] text-text-muted">
-                Validated as of {new Date(graduateResult.graduatedAt!).toLocaleString()}. Reformatting for wider
-                channels (X, LinkedIn, blog) is a later step — not wired up yet.
-              </p>
+            <div className="flex flex-col gap-3 rounded-[16px] bg-context-fill p-4">
+              <div>
+                <p className="font-display text-[15px] font-semibold text-deep-ink">Graduated. Take it to your other channels.</p>
+                <p className="mt-1 text-[13px] leading-[1.5] text-text-muted">
+                  It proved itself on {new Date(graduateResult.graduatedAt!).toLocaleDateString()}. Misuq redrafts the same
+                  story for each platform, with that platform&apos;s rules. Post the ones you want.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {DRAFT_FORMATS.map((format) => (
+                  <Link
+                    key={format}
+                    href={`/capture?story=${graduateResult.id}&format=${format}`}
+                    className="rounded-full border border-border-input bg-card px-3.5 py-1.5 text-[13px] font-semibold text-indigo transition-colors hover:border-indigo"
+                  >
+                    {CHANNEL_LABELS[format]} →
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>

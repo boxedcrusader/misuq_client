@@ -111,6 +111,12 @@ Separate from the static landing page above: real screens wired to `../service`'
   - **First-run guide (`LoopGuide.tsx`).** Seven slides (welcome, the five steps, draft-only), auto-opens once per **account** after onboarding (`misuq-guide-seen-v1:<userId>` in localStorage), reopens from the new app header's "How it works". The header (in `RequireAuth.tsx`) now has the logo, Home/Capture, How it works, theme toggle, email, Log out; screens got extra top padding for it.
   - Status badges read founder words (`STAGED` → "Sent"); channel/angle small print is humanized (`labels.ts#humanizeEnum`).
 
+- [x] Formats + public rooms (2026-11-04, founder decision; backend side in `../service/CLAUDE.md` §8). Verified in-browser on the dev branch as a fresh no-room founder: capture → X post (live 280 counter) → LinkedIn post → add "My X followers (1,200)" → "I've posted it to My X followers" → report back → graduate → "Take it to your other channels" → email version marked "For your wider channels".
+  - `/capture`: "Where will you post it first?" picker (X post / LinkedIn post / Email; default = the founder's first room's format, else X) before drafting; after drafting, one tab per format (✓ when drafted), a missing format is one click ("Draft the LinkedIn post →"), unsaved edits kept per piece, X shows `n/280`. `?format=` opens a tab. The "Next step" panel adapts: graduated → "Post it"; has a room → "pick the room"; no room → "your followers count as a room".
+  - `/send`: picks the piece in `?format=` (chips when several formats exist), lists rooms that fit the format first, says "posted to" for public rooms and "sent to" for private ones, and hints when the format doesn't match the room (with a link to draft the right one).
+  - `/graduate` success links to each format (`/capture?story=&format=`). `/report-back` labels public rooms "Posted to … · N followers".
+  - Labels: `labels.ts` has `CHANNEL_LABELS`, `DRAFT_FORMATS`, `formatForRoom`, `isPublicRoom`, `formatNoun`/`withArticle` ("an X post", "a LinkedIn post"); `AUDIENCE_TYPE_LABELS` gained "My X followers" / "My LinkedIn network". Copy in home, onboarding, the guide and the send screen now says a room can be your followers.
+
 ## Running
 
 ```bash

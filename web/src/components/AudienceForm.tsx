@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ApiError, createAudience, type Audience, type AudienceType } from "@/lib/api";
-import { AUDIENCE_TYPE_LABELS } from "@/lib/labels";
+import { AUDIENCE_TYPE_LABELS, isPublicRoom } from "@/lib/labels";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { toApiError } from "@/lib/errors";
 
@@ -51,7 +51,7 @@ export function AudienceForm({ onCreated }: { onCreated: (audience: Audience) =>
           type="text"
           value={name}
           maxLength={80}
-          placeholder="Beta list, our Discord, my founder group chat…"
+          placeholder="My X followers, beta list, founder group chat…"
           onChange={(e) => setName(e.target.value)}
           className={INPUT_CLASS}
         />
@@ -83,7 +83,9 @@ export function AudienceForm({ onCreated }: { onCreated: (audience: Audience) =>
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-text-muted-2">Roughly how many people?</span>
+        <span className="text-[13px] font-medium text-text-muted-2">
+          {type && isPublicRoom(type) ? "Roughly how many followers?" : "Roughly how many people?"}
+        </span>
         <input
           type="number"
           inputMode="numeric"
@@ -107,7 +109,7 @@ export function AudienceForm({ onCreated }: { onCreated: (audience: Audience) =>
         disabled={!canSave}
         className="self-start rounded-full border border-indigo px-4 py-2 text-[13px] font-semibold text-indigo disabled:cursor-not-allowed disabled:border-border-badge disabled:text-text-faint"
       >
-        {saving ? "Adding…" : "Add this audience"}
+        {saving ? "Adding…" : "Add this room"}
       </button>
     </form>
   );

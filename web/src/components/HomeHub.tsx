@@ -73,7 +73,7 @@ function heroCopy(hero: Hero): { eyebrow: string; title: string; body: string; c
       return {
         eyebrow: "Your call",
         title: `${name} has a read.`,
-        body: "Decide whether it's ready for X, LinkedIn or your blog — or keep testing it on your small room.",
+        body: "Decide whether it's ready for your other channels — Misuq will redraft it for each — or keep testing.",
         cta: "Decide →",
         href: STATUS_INFO.REPORTED.href(id),
       };
@@ -81,15 +81,15 @@ function heroCopy(hero: Hero): { eyebrow: string; title: string; body: string; c
       return {
         eyebrow: "Ready to test",
         title: `${name} is drafted.`,
-        body: "Try it on your small room before it goes anywhere public. Their reaction tells you if it's ready.",
-        cta: "Send it to your small room →",
+        body: "Try it on one room first — your followers or a small group. How it lands tells you whether to take it everywhere else.",
+        cta: "Post or send it →",
         href: STATUS_INFO.DRAFTED.href(id),
       };
     case "post":
       return {
         eyebrow: "Draft ready",
         title: `${name} is drafted.`,
-        body: "You're in draft-only mode: open it, copy it and post it yourself. Add a small room any time to test first.",
+        body: "Open it, copy it and post it. If you post on X or LinkedIn, add your followers as a room so you can report back on how it did.",
         cta: "Open the draft →",
         href: `/capture?story=${id}`,
       };
@@ -218,15 +218,16 @@ function SmallRoomCard({ onAdded }: { onAdded: (audience: Audience) => void }) {
       <div className="flex flex-col gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-[0.1em] text-indigo">Draft-only mode</span>
         <h2 className="font-display text-[19px] font-semibold leading-[1.3] text-deep-ink">
-          No small room yet? You can still use Misuq.
+          Add a room, and Misuq starts learning what lands.
         </h2>
         <p className="text-[13.5px] leading-[1.55] text-text-muted">
-          Right now you capture, get a draft, then copy it and post it yourself. Add a small room — even three people
-          — and Misuq can show you what lands before you go public.
+          Right now you capture, get a draft, then copy it and post it yourself. A room doesn&apos;t have to be
+          private: if you post on X or LinkedIn, your followers count. Post there, report back, take what works
+          everywhere else.
         </p>
       </div>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {["3 founder friends in a group chat", "A Discord or Slack you're active in", "Your first beta users", "People who replied to you before"].map(
+        {["Your X followers", "Your LinkedIn network", "A Discord, Slack or email list", "3 founder friends in a group chat"].map(
           (idea) => (
             <li key={idea} className="flex items-center gap-2 rounded-[12px] bg-context-fill px-3 py-2 text-[13px] text-text-muted">
               <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo" />

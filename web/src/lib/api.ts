@@ -51,7 +51,12 @@ export type Tone =
   | "REFLECTIVE"
   | "OTHER";
 export type ContentPieceStatus = "DRAFTED" | "EDITED" | "SENT";
-export type AudienceType = "EMAIL_LIST" | "DISCORD" | "BETA_USERS" | "PEERS";
+// X_FOLLOWERS / LINKEDIN_NETWORK (2026-11-04): public rooms — a founder's own
+// followers count as the first room. A room's type can't change after
+// creation (PATCH rejects it).
+export type AudienceType = "EMAIL_LIST" | "DISCORD" | "BETA_USERS" | "PEERS" | "X_FOLLOWERS" | "LINKEDIN_NETWORK";
+// The formats POST /stories/:id/draft accepts (DraftStoryDto).
+export type DraftChannel = "EMAIL" | "X" | "LINKEDIN";
 export type Sentiment = "POSITIVE" | "NEUTRAL" | "MIXED" | "NEGATIVE";
 export type PostFormat = "SINGLE" | "THREAD" | "QUOTE" | "REPLY" | "LONGFORM";
 export type Plan = "DRAFT_ONLY" | "STARTER" | "GROWTH" | "SCALE";
@@ -147,6 +152,8 @@ export interface SignalRecord {
   // OTHER) — the backend never pools OTHER as a grouping key.
   tone: Tone | null;
   audienceSizeSnapshot: number;
+  // Kind of room the result came from; null on rows from before 2026-11-04.
+  audienceTypeSnapshot: AudienceType | null;
   views: number | null;
   replyCount: number | null;
   signupCount: number | null;
@@ -497,8 +504,14 @@ export function captureStory(body: CaptureStoryRequest): Promise<Story> {
   return apiRequest<Story>("/stories", { method: "POST", body: JSON.stringify(body) });
 }
 
-export function draftStory(storyId: string): Promise<ContentPiece> {
-  return apiRequest<ContentPiece>(`/stories/${storyId}/draft`, { method: "POST" });
+// channel omitted = EMAIL (the backend default). Drafting a story that's
+// already past DRAFTED adds a piece in the new format without moving the
+// story back; after graduation the piece is WIDE-stage.
+export function draftStory(storyId: string, channel?: DraftChannel): Promise<ContentPiece> {
+  return apiRequest<ContentPiece>(`/stories/${storyId}/draft`, {
+    method: "POST",
+    body: JSON.stringify(channel ? { channel } : {}),
+  });
 }
 
 // draftStory's response is the ContentPiece, not the Story — it has no
