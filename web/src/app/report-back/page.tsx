@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { ReportBackFlow } from "@/components/ReportBackFlow";
 import { RequireAuth } from "@/components/RequireAuth";
 
@@ -6,7 +7,10 @@ import { RequireAuth } from "@/components/RequireAuth";
 export default function ReportBackPage() {
   return (
     <RequireAuth>
-      <ReportBackFlow />
+      {/* Required by useSearchParams (the ?story= deep link) under static export. */}
+      <Suspense fallback={<div className="min-h-screen" aria-busy="true" />}>
+        <ReportBackFlow />
+      </Suspense>
     </RequireAuth>
   );
 }

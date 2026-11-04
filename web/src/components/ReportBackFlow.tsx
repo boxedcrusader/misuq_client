@@ -12,6 +12,8 @@ import {
   type SendWithContentPiece,
 } from "@/lib/api";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { useStoryParam } from "@/lib/query";
+import { toApiError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
 
 // Web translation of design_handoff_misuq_flow's Report Back screen: a
@@ -29,17 +31,28 @@ import { StatusBadge } from "@/components/StatusBadge";
 // is a real-LLM-swap concern for later, not something this screen judges or
 // displays.
 
-function describeReportError(error: ApiError): string {
+// undefined = the shared wording from lib/errors.ts.
+function describeReportError(error: ApiError): string | undefined {
   if (error.statusCode === 409 && /has already been reported on/.test(error.message)) {
-    return "This send has already been reported on.";
+    return "You've already reported back on this send.";
   }
-  // Covers the niche 400 ("Set your niche before reporting back...") and the
-  // regression-guard 409 verbatim, per spec: "these are the state machine
-  // talking, display them."
-  return error.message;
+  if (error.statusCode === 409 && /can be reported on/.test(error.message)) {
+    return "This story has moved past report-back. Check your home page for where it is now.";
+  }
+  if (error.statusCode === 400 && /Set your niche/.test(error.message)) {
+    return "Tell us what you're building first (finish onboarding) — it's how your results get grouped.";
+  }
+  return undefined;
 }
 
+// Remounts per ?story= value, so following a link to another update (or to
+// a plain /report-back) always starts from a clean screen.
 export function ReportBackFlow() {
+  const storyId = useStoryParam();
+  return <ReportBackFlowInner key={storyId ?? "none"} storyId={storyId} />;
+}
+
+function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
   const [sends, setSends] = useState<SendWithContentPiece[] | null>(null);
   const [listError, setListError] = useState<ApiError | null>(null);
 
@@ -75,7 +88,7 @@ export function ReportBackFlow() {
       .then((page) => Promise.all(page.data.map((s) => getSend(s.id))))
       .then((enriched) => setSends(enriched))
       .catch((err) => {
-        setListError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+        setListError(toApiError(err));
       });
   }
 
@@ -88,17 +101,27 @@ export function ReportBackFlow() {
     listSends(1, 20)
       .then((page) => Promise.all(page.data.map((s) => getSend(s.id))))
       .then((enriched) => {
-        if (!cancelled) setSends(enriched);
+        if (cancelled) return;
+        setSends(enriched);
+        // ?story=<id> opens that story's send: the newest one still waiting
+        // for a report, else its newest send.
+        const wanted = storyId;
+        if (!wanted) return;
+        const forStory = enriched
+          .filter((s) => s.contentPiece.story.id === wanted)
+          .sort((a, b) => (a.sentAt < b.sentAt ? 1 : -1));
+        const match = forStory.find((s) => s.contentPiece.story.status === "STAGED") ?? forStory[0];
+        if (match) handleSelectSend(match);
       })
       .catch((err) => {
         if (!cancelled) {
-          setListError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+          setListError(toApiError(err));
         }
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [storyId]);
 
   function handleSelectSend(send: SendWithContentPiece) {
     setSelectedSend(send);
@@ -127,17 +150,17 @@ export function ReportBackFlow() {
       setReportResult(result);
       setStoryStatus(refreshed.status);
     } catch (err) {
-      setSubmitError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+      setSubmitError(toApiError(err));
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 py-16 sm:py-20">
+    <div className="mx-auto flex min-h-screen w-full max-w-[560px] flex-col gap-6 px-6 pb-16 pt-24 sm:pb-20 sm:pt-28">
       <div className="flex flex-col gap-1">
         <span className="text-xs font-medium uppercase tracking-[0.12em] text-text-muted-3">
-          Report back
+          Step 4 · Report back
         </span>
         <h1 className="font-display text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] sm:text-[32px]">
           How did it land?

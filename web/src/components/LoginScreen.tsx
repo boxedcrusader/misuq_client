@@ -6,16 +6,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, login, register } from "@/lib/api";
 import { getSession, safeNextPath } from "@/lib/session";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { toApiError } from "@/lib/errors";
 import { Logo } from "@/components/Logo";
 
 type Mode = "login" | "register";
 
-function describeAuthError(error: ApiError, mode: Mode): string {
+// undefined = let ErrorBanner use the shared wording (lib/errors.ts), which
+// already rewords validation (400), network (0), rate limits (429) and 5xx.
+function describeAuthError(error: ApiError, mode: Mode): string | undefined {
   if (error.statusCode === 401) return "That email and password don't match an account.";
   if (error.statusCode === 409) return "There's already an account with this email — log in instead.";
-  // 400 = class-validator messages (bad email, short password), already
-  // specific; 0 = network, already worded for humans by api.ts.
-  if (error.statusCode === 400 || error.statusCode === 0) return error.message;
+  if (error.statusCode === 400 || error.statusCode === 0 || error.statusCode === 429) return undefined;
   return mode === "login" ? "Couldn't log you in. Try again in a moment." : "Couldn't create your account. Try again in a moment.";
 }
 
@@ -60,7 +61,7 @@ export function LoginScreen() {
         router.replace("/onboarding");
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, { statusCode: 0, error: "Unknown", message: String(err) }));
+      setError(toApiError(err));
       setSubmitting(false);
     }
   }
@@ -127,7 +128,14 @@ export function LoginScreen() {
           {!isLogin && <span className="text-[12px] text-text-faint">At least 8 characters.</span>}
         </label>
 
-        {error && <ErrorBanner error={error} message={describeAuthError(error, mode)} />}
+        {error && (
+          <ErrorBanner
+            error={error}
+            title={error.statusCode === 401 ? "That didn't work" : error.statusCode === 409 ? "You already have an account" : undefined}
+            message={describeAuthError(error, mode)}
+            hideAction
+          />
+        )}
 
         <button
           type="submit"
