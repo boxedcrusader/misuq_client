@@ -438,17 +438,23 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
 
       {!story && !isOpening && (
         <div className="flex flex-col gap-4 rounded-[18px] border border-border-hairline bg-card p-6">
+          <label htmlFor="capture-update" className="text-[13px] font-medium text-text-muted-2">
+            Your update <span className="text-text-faint">· required</span>
+          </label>
           <textarea
+            id="capture-update"
             value={rawCapture}
             onChange={(e) => setRawCapture(e.target.value)}
-            placeholder="Shipped the new onboarding flow — cut signup from 6 steps to 2."
+            placeholder="Type what you shipped or learned, in your own words. e.g. “Cut signup from 6 steps to 2.”"
             rows={5}
-            className="w-full resize-none border-0 bg-transparent font-display text-[22px] font-medium leading-[1.3] text-deep-ink outline-none placeholder:text-text-faint"
+            autoFocus
+            className="-mt-2 w-full resize-none rounded-[12px] border border-border-input bg-transparent p-3 font-display text-[19px] font-medium leading-[1.35] text-deep-ink outline-none placeholder:text-[15px] placeholder:font-normal placeholder:italic placeholder:text-text-faint focus:border-indigo"
           />
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Add a title (optional)"
+            placeholder="Short title (optional)"
+            aria-label="Title (optional)"
             className="w-full rounded-[10px] border border-border-input bg-transparent px-3 py-2 text-[14px] text-deep-ink outline-none placeholder:text-text-muted-3 focus:border-indigo"
           />
 
@@ -472,9 +478,13 @@ function CaptureFlowInner({ storyId, formatParam }: { storyId: string | null; fo
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-[13px] text-text-faint">
-              {rawCapture.length > 0 ? `${rawCapture.length} characters` : "Optional"}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <span className="text-[13px] leading-[1.4] text-text-faint" aria-live="polite">
+              {rawCapture.trim().length > 0
+                ? `${rawCapture.length} characters`
+                : title.trim().length > 0
+                  ? "That's the title box. Write the update itself in the big box above."
+                  : "Write your update above to continue."}
             </span>
             <button type="button" onClick={handleCapture} disabled={!canCapture} className={PRIMARY}>
               {isCapturing ? "Capturing…" : "Capture →"}
