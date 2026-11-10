@@ -12,7 +12,8 @@ import {
   type SendWithContentPiece,
 } from "@/lib/api";
 import { ErrorBanner } from "@/components/ErrorBanner";
-import { isPublicRoom } from "@/lib/labels";
+import { CHANNEL_LABELS, formatNoun, isPublicRoom } from "@/lib/labels";
+import { timeAgo } from "@/lib/loop";
 import { useStoryParam } from "@/lib/query";
 import { toApiError } from "@/lib/errors";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -59,6 +60,7 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
 
   const [selectedSend, setSelectedSend] = useState<SendWithContentPiece | null>(null);
   const [rawFeedback, setRawFeedback] = useState("");
+  const [showFullPost, setShowFullPost] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<ApiError | null>(null);
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
@@ -144,6 +146,7 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
     setSelectedSend(null);
     setReportResult(null);
     setSubmitError(null);
+    setShowFullPost(false);
     loadSends();
   }
 
@@ -193,16 +196,15 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
                 onClick={() => handleSelectSend(send)}
                 className="flex flex-col gap-1 rounded-[16px] border border-border-hairline bg-card p-4 text-left"
               >
-                <div className="flex items-center justify-between">
-                  {send.contentPiece.story.title && (
-                    <span className="font-display text-[15px] font-semibold text-deep-ink">
-                      {send.contentPiece.story.title}
-                    </span>
-                  )}
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-display text-[15px] font-semibold text-deep-ink">
+                    {send.contentPiece.story.title ?? `Your ${formatNoun(send.contentPiece.channel)}`}
+                  </span>
                   <StatusBadge status={send.contentPiece.story.status} />
                 </div>
-                <span className="text-[13px] text-text-muted-3">
-                  {roomLine(send.audienceId, send.audienceSizeSnapshot)}
+                <p className="line-clamp-2 text-[13.5px] leading-[1.5] text-text-muted">{send.contentPiece.body}</p>
+                <span className="text-[12.5px] text-text-muted-3">
+                  {roomLine(send.audienceId, send.audienceSizeSnapshot)} · {timeAgo(send.sentAt)}
                 </span>
               </button>
             );
@@ -219,15 +221,31 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
             {storyStatus && <StatusBadge status={storyStatus} />}
           </div>
 
-          <div className="rounded-[16px] bg-cta-panel p-4">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo">
-                {selectedSend.contentPiece.story.title ?? "Sent piece"}
+          {/* Show the post itself: a room + format alone doesn't tell the
+              founder which post they're reporting on (beta feedback, 2026-11-10). */}
+          <div className="flex flex-col gap-2 rounded-[16px] bg-cta-panel p-4">
+            <div className="flex items-start justify-between gap-3">
+              <span className="font-display text-[15px] font-semibold text-deep-ink">
+                {selectedSend.contentPiece.story.title ?? `The ${formatNoun(selectedSend.contentPiece.channel)} you're reporting on`}
               </span>
-              <span className="text-[12px] text-text-faint">{selectedSend.contentPiece.channel}</span>
+              <span className="shrink-0 text-[12px] font-medium text-text-muted-3">
+                {CHANNEL_LABELS[selectedSend.contentPiece.channel]}
+              </span>
             </div>
-            <p className="text-[13px] text-text-muted-3">
-              {roomLine(selectedSend.audienceId, selectedSend.audienceSizeSnapshot)}
+            <p className={`whitespace-pre-line text-[14px] leading-[1.55] text-deep-ink ${showFullPost ? "" : "line-clamp-5"}`}>
+              {selectedSend.contentPiece.body}
+            </p>
+            {selectedSend.contentPiece.body.length > 240 && (
+              <button
+                type="button"
+                onClick={() => setShowFullPost((v) => !v)}
+                className="self-start text-[13px] font-medium text-indigo"
+              >
+                {showFullPost ? "Show less" : "Show the whole post"}
+              </button>
+            )}
+            <p className="text-[12.5px] text-text-muted-3">
+              {roomLine(selectedSend.audienceId, selectedSend.audienceSizeSnapshot)} · {timeAgo(selectedSend.sentAt)}
             </p>
           </div>
 
@@ -244,7 +262,7 @@ function ReportBackFlowInner({ storyId }: { storyId: string | null }) {
               <textarea
                 value={rawFeedback}
                 onChange={(e) => setRawFeedback(e.target.value)}
-                placeholder="~1.4k views, 6 replies, 2 quotes, 9 bookmarks, 3 new followers. Someone asked if it works with Excel."
+                placeholder="In your own words. e.g. “~1.4k views, 6 replies, 2 quotes. Someone asked if it works with Excel.”"
                 rows={4}
                 className="w-full resize-none rounded-[14px] border border-border-input bg-transparent p-3.5 text-[14px] leading-[1.5] text-deep-ink outline-none placeholder:text-text-faint focus:border-indigo"
               />

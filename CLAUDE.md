@@ -139,6 +139,8 @@ Separate from the static landing page above: real screens wired to `../service`'
 
 - [x] Slow first load after idle (2026-11-10, founder report: home showed the greeting and skeletons for a long time). Cause is backend, not client: Render's free instance sleeps after ~15 min and takes up to a minute to wake; home already fires its two requests in parallel. Client mitigations in `src/lib/warmup.ts`: `warmUpApi()` pings `GET /health` (no-cors, fire-and-forget, once per page load) when the landing page (`<WarmUpApi />` in `app/page.tsx`) or `/login` opens, so the wake-up starts before the founder logs in; `useSlowFlag` shows a "Waking the server up…" line under the login button and above home's skeletons after 4s. `API_BASE_URL` is now exported from `api.ts`. The real fix is keeping the API warm (an external pinger on `/health`) or a paid Render instance; that's outside this repo.
 
+- [x] Report-back shows which post it's about (2026-11-10, founder feedback: "idk what piece it's talking about"). The selected-send card used to show only the story title (often null → "Sent piece"), the raw channel enum and the room. It now shows the post text itself (`contentPiece.body`, clamped to 5 lines with "Show the whole post" past 240 chars), a fallback heading "The X post you're reporting on", the channel label, and when it went out (`timeAgo(sentAt)`). Picker rows also show a 2-line preview of the post and the send time, so untitled updates are tellable apart. Textarea placeholder now reads as an example ("In your own words. e.g. …"), same lesson as the capture fix. No API change: `GET /sends/:id` already includes the piece.
+
 ## Running
 
 ```bash
