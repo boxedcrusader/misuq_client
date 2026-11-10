@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { WAKING_COPY, useSlowFlag } from "@/lib/warmup";
 import { listAudiences, listStories, type ApiError, type Audience, type Story, type StoryStatus } from "@/lib/api";
 import { toApiError } from "@/lib/errors";
 import { openGuide } from "@/lib/guide";
@@ -326,6 +327,7 @@ export function HomeHub() {
   const [filter, setFilter] = useState<StoryStatus | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [hello] = useState(greeting);
+  const slow = useSlowFlag(stories === null && !listError);
 
   useEffect(() => {
     let cancelled = false;
@@ -381,6 +383,11 @@ export function HomeHub() {
 
       {stories === null && !listError && (
         <>
+          {slow && (
+            <p className="text-[13.5px] leading-[1.5] text-text-muted" aria-live="polite">
+              {WAKING_COPY}
+            </p>
+          )}
           <Skeleton className="h-[260px]" />
           <Skeleton className="h-[120px]" />
         </>

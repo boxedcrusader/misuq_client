@@ -137,6 +137,8 @@ Separate from the static landing page above: real screens wired to `../service`'
 
 - [x] Capture screen dead-end fixed (2026-11-10, from beta feedback: a tester couldn't get past `/capture`). Cause: the main textarea had no border and a realistic placeholder ("Shipped the new onboarding flow…"), so it looked pre-filled; the tester typed into the title input instead, and the footer said "Optional" beside the empty required box while Capture stayed disabled with no reason given. Fix in `CaptureFlow.tsx`: "Your update · required" label, bordered + autofocused textarea, placeholder reads as an instruction with a quoted example (italic, smaller), title placeholder "Short title (optional)", and the footer now explains the disabled button ("Write your update above to continue", or "That's the title box…" when only the title is filled). Verified with `pnpm build`; not checked in a browser.
 
+- [x] Slow first load after idle (2026-11-10, founder report: home showed the greeting and skeletons for a long time). Cause is backend, not client: Render's free instance sleeps after ~15 min and takes up to a minute to wake; home already fires its two requests in parallel. Client mitigations in `src/lib/warmup.ts`: `warmUpApi()` pings `GET /health` (no-cors, fire-and-forget, once per page load) when the landing page (`<WarmUpApi />` in `app/page.tsx`) or `/login` opens, so the wake-up starts before the founder logs in; `useSlowFlag` shows a "Waking the server up…" line under the login button and above home's skeletons after 4s. `API_BASE_URL` is now exported from `api.ts`. The real fix is keeping the API warm (an external pinger on `/health`) or a paid Render instance; that's outside this repo.
+
 ## Running
 
 ```bash

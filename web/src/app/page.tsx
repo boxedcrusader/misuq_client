@@ -6,10 +6,12 @@ import { ReportBack } from "@/components/ReportBack";
 import { ClosingCta } from "@/components/ClosingCta";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { WarmUpApi } from "@/lib/warmup";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-ground text-deep-ink">
+      <WarmUpApi />
       <Nav />
       <Reveal>
         <Hero />

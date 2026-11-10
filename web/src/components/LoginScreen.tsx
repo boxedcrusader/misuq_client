@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { WAKING_COPY, useSlowFlag, warmUpApi } from "@/lib/warmup";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, login, register } from "@/lib/api";
@@ -35,6 +36,13 @@ export function LoginScreen() {
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
+
+  const slow = useSlowFlag(submitting);
+
+  useEffect(() => {
+    // Start waking the API while the founder types (see lib/warmup.ts).
+    warmUpApi();
+  }, []);
 
   useEffect(() => {
     // Already logged in (e.g. a bookmarked /login): skip the form.
@@ -144,6 +152,11 @@ export function LoginScreen() {
         >
           {submitting ? (isLogin ? "Logging in…" : "Creating account…") : isLogin ? "Log in" : "Create account"}
         </button>
+        {slow && (
+          <p className="text-[13px] leading-[1.5] text-text-muted" aria-live="polite">
+            {WAKING_COPY}
+          </p>
+        )}
       </form>
 
       <p className="text-center text-[13px] text-text-muted">
