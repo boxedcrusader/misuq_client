@@ -135,6 +135,8 @@ Separate from the static landing page above: real screens wired to `../service`'
     - `updateMe` now also updates the session's name (`setSessionName`), so the home greeting follows a rename.
   - `/report-back`: asks for the post's analytics numbers (views, replies, quotes, reposts, bookmarks, shares, new followers) and says to report back after ~48 hours.
 
+- [x] Capture screen dead-end fixed (2026-11-10, from beta feedback: a tester couldn't get past `/capture`). Cause: the main textarea had no border and a realistic placeholder ("Shipped the new onboarding flow…"), so it looked pre-filled; the tester typed into the title input instead, and the footer said "Optional" beside the empty required box while Capture stayed disabled with no reason given. Fix in `CaptureFlow.tsx`: "Your update · required" label, bordered + autofocused textarea, placeholder reads as an instruction with a quoted example (italic, smaller), title placeholder "Short title (optional)", and the footer now explains the disabled button ("Write your update above to continue", or "That's the title box…" when only the title is filled). Verified with `pnpm build`; not checked in a browser.
+
 ## Running
 
 ```bash
